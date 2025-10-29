@@ -31,7 +31,7 @@ public class FollowController {
     @GetMapping("/api/v1/{userId}/followers")
     @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<List<FollowResponse>> getFollowers(@PathVariable Long userId) {
        try {
@@ -48,7 +48,7 @@ public class FollowController {
     @GetMapping("/api/v1/{userId}/following")
     @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<List<FollowResponse>> getFollowing(@PathVariable Long userId) {
         try {
@@ -65,7 +65,7 @@ public class FollowController {
     @PostMapping("/api/v1/{followId}/follow")
     @Operation(summary = "팔로워", description = "유저 팔로워하기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<Boolean> follow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long followId) {
         try {
@@ -82,7 +82,7 @@ public class FollowController {
     @PostMapping("/api/v1/{followId}/follow")
     @Operation(summary = "언팔로워", description = "유저 언팔로워하기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<Boolean> unfollow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long unfollowId) {
         try {
