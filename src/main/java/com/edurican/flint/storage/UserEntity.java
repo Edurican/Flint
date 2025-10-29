@@ -27,10 +27,10 @@ public class UserEntity extends BaseEntity{
     private String bio;
 
     @Column(name = "follower_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int followersCount;
+    private Integer followersCount;
 
     @Column(name = "following_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int followingCount;
+    private Integer followingCount;
 
     public UserEntity(String username, String password) {
         this.username = username;
