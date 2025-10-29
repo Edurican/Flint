@@ -13,11 +13,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class UserEntity extends BaseEntity{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @Column(name = "username", unique = true)
+    @Column(name = "user_name", unique = true)
     private String username;
 
     @Column(name = "password")
@@ -29,13 +26,10 @@ public class UserEntity extends BaseEntity{
     @Column(name = "bio", length = 255, nullable = true)
     private String bio;
 
-    @Column(name = "created_at", updatable = false)
-    private Date created_at;
-
-    @Column(name = "followerCount", nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(name = "follower_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
     private int followersCount;
 
-    @Column(name = "followingCount", nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(name = "following_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
     private int followingCount;
 
     public UserEntity(String username, String password) {
