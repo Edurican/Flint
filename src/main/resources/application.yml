@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: Flint
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  profiles:
+    active: local
+
+server:
+  port: 8080
