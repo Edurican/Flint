@@ -1,15 +1,17 @@
 package com.edurican.flint.storage;
 
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public class CommentLikeEntity extends BaseSoftEntity{
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "comment_id")
-    private UserEntity commentId;
-
-    public CommentLikeEntity(UserEntity commentId) {
-        this.commentId = commentId;
-    }
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class CommentLikeEntity extends BaseEntity{
+    @Column(name = "comment_id")
+    private Long commentId;
 }
