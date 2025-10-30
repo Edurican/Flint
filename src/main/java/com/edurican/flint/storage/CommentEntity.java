@@ -8,21 +8,20 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CommentEntity extends BaseEntity {
+public class CommentEntity extends BaseSoftEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false) //어떤식 로딩
     @JoinColumn(name = "user_id")
-    private UserEntity user;
+    private Long user;
 
-/*
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_id")
-    private PostEntity post;
-*/
+    private Long post;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_comment_id")
-    private CommentEntity parentComment;
+    private Long parentComment;
 
     @Column(name = "content", nullable = false, length = 100)
     private String content;
@@ -31,16 +30,16 @@ public class CommentEntity extends BaseEntity {
     private Integer likeCount;
 
     public CommentEntity(
-            UserEntity user
-            , CommentEntity  parentComment
+            Long user
+            , Long  parentComment
+            , Long post
             , String content
             , Integer likeCount
-            //, Long commentId
     ) {
         this.user = user;
+        this.post = post;
         this.parentComment = parentComment;
         this.content = content;
         this.likeCount = likeCount;
-        // this.commentId = commentId;
     }
 }
