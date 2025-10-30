@@ -38,7 +38,7 @@ public class UserController {
 
     /* UserService에서 Jwt 발급 로직 필요!!! */
     @PostMapping("/api/v1/auth/login")
-    @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
+    @Operation(summary = "로그인", description = "로그인")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
     })
