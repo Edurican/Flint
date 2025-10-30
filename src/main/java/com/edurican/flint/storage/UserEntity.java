@@ -9,7 +9,6 @@ import java.util.Date;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class UserEntity extends BaseEntity{
 
@@ -26,10 +25,10 @@ public class UserEntity extends BaseEntity{
     @Column(name = "bio", length = 255, nullable = true)
     private String bio;
 
-    @Column(name = "follower_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(name = "follower_count", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer followersCount;
 
-    @Column(name = "following_Count", nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(name = "following_count", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer followingCount;
 
     public UserEntity(String username, String password) {
