@@ -31,67 +31,52 @@ public class FollowController {
     @GetMapping("/api/v1/{userId}/followers")
     @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<List<FollowResponse>> getFollowers(@PathVariable Long userId) {
-       try {
-           List<Follow> follows = followService.getFollowers(userId);
-           List<FollowResponse> followers = follows.stream()
-                   .map(follow -> new FollowResponse(follow.getFollower().getUsername()))
-                   .toList();
-           return ApiResult.success(followers);
-       } catch (Exception e) {
-           return ApiResult.error(ErrorType.DEFAULT_ERROR);
-       }
+        List<Follow> follows = followService.getFollowers(userId);
+        List<FollowResponse> followers = follows.stream()
+                .map(follow -> new FollowResponse(follow.getFollower().getUsername()))
+                .toList();
+
+        return ApiResult.success(followers);
     }
 
     @GetMapping("/api/v1/{userId}/following")
     @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<List<FollowResponse>> getFollowing(@PathVariable Long userId) {
-        try {
-            List<Follow> follows = followService.getFollowing(userId);
-            List<FollowResponse> following = follows.stream()
-                    .map(follow -> new FollowResponse(follow.getFollowing().getUsername()))
-                    .toList();
-            return ApiResult.success(following);
-        } catch (Exception e) {
-            return ApiResult.error(ErrorType.DEFAULT_ERROR);
-        }
+        List<Follow> follows = followService.getFollowing(userId);
+        List<FollowResponse> following = follows.stream()
+                .map(follow -> new FollowResponse(follow.getFollowing().getUsername()))
+                .toList();
+
+        return ApiResult.success(following);
     }
 
     @PostMapping("/api/v1/{followId}/follow")
     @Operation(summary = "팔로워", description = "유저 팔로워하기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<Boolean> follow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long followId) {
-        try {
-            //Long userId = extractUserId(userDetails.get);
-            long userId = 1;
-            followService.follow(userId, followId);
-            return ApiResult.success(true);
-        } catch (Exception e) {
-            return ApiResult.error(ErrorType.DEFAULT_ERROR);
-        }
+        long userId = 1;
+        followService.follow(userId, followId);
+        return ApiResult.success(true);
     }
 
     @DeleteMapping("/api/v1/{unfollowId}/follow")
-    @PostMapping("/api/v1/{followId}/follow")
     @Operation(summary = "언팔로워", description = "유저 언팔로워하기")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
     public ApiResult<Boolean> unfollow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long unfollowId) {
-        try {
-            //Long userId = extractUserId(userDetails);
-            long userId = 1;
-            followService.unfollow(userId, unfollowId);
-            return ApiResult.success(true);
-        } catch (Exception e) {
-            return ApiResult.error(ErrorType.DEFAULT_ERROR);
-        }
+        long userId = 1;
+        followService.unfollow(userId, unfollowId);
+        return ApiResult.success(true);
     }
+
+
 }

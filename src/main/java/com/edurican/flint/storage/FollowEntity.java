@@ -13,24 +13,18 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Table(name = "follows")
-public class FollowEntity {
+@Table(
+        name = "follows",
+        indexes = {
+                @Index(name = "idx_follower_following", columnList = "follower_id, following_id", unique = true),
+                @Index(name = "idx_following", columnList = "following_id")
+        }
+)
+public class FollowEntity extends BaseEntity {
 
-    @EmbeddedId
-    private FollowId id;
+    @Column(name = "follower_id", nullable = false)
+    private Long followerId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId(value = "followerId")
-    @JoinColumn(name = "follower_id")
-    private UserEntity follower;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId(value = "followingId")
-    @JoinColumn(name = "following_id")
-    private UserEntity following;
-
-    @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "following_id", nullable = false)
+    private Long followingId;
 }
