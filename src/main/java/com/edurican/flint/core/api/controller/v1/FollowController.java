@@ -36,7 +36,13 @@ public class FollowController {
     public ApiResult<List<FollowResponse>> getFollowers(@PathVariable Long userId) {
         List<Follow> follows = followService.getFollowers(userId);
         List<FollowResponse> followers = follows.stream()
-                .map(follow -> new FollowResponse(follow.getFollower().getUsername()))
+                .map(follow ->
+                        FollowResponse.builder()
+                                .followId(follow.getFollowId())
+                                .username(follow.getUsername())
+                                .createdAt(follow.getCreatedAt())
+                                .build()
+                )
                 .toList();
 
         return ApiResult.success(followers);
@@ -50,7 +56,13 @@ public class FollowController {
     public ApiResult<List<FollowResponse>> getFollowing(@PathVariable Long userId) {
         List<Follow> follows = followService.getFollowing(userId);
         List<FollowResponse> following = follows.stream()
-                .map(follow -> new FollowResponse(follow.getFollowing().getUsername()))
+                .map(follow ->
+                        FollowResponse.builder()
+                                .followId(follow.getFollowId())
+                                .username(follow.getUsername())
+                                .createdAt(follow.getCreatedAt())
+                                .build()
+                )
                 .toList();
 
         return ApiResult.success(following);
@@ -61,7 +73,7 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
-    public ApiResult<Boolean> follow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long followId) {
+    public ApiResult<Boolean> follow(@PathVariable Long followId) {
         long userId = 1;
         followService.follow(userId, followId);
         return ApiResult.success(true);
@@ -72,7 +84,7 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiResult.class))})
     })
-    public ApiResult<Boolean> unfollow(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long unfollowId) {
+    public ApiResult<Boolean> unfollow(@PathVariable Long unfollowId) {
         long userId = 1;
         followService.unfollow(userId, unfollowId);
         return ApiResult.success(true);

@@ -6,14 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class FollowResponse {
+    private Long followId;
     private String username;
-
-    public FollowResponse from(Follow follow) {
-        return FollowResponse.builder().build();
-    }
+    private LocalDateTime createdAt;
 }

@@ -8,7 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class FollowService {
@@ -33,15 +37,20 @@ public class FollowService {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
-        // 팔로워 가져오기 및 유저 아이디 리스트로 저장
-        List<FollowEntity> followEntities = followRepository.findByFollowingId(userId);
-        List<Long> followerIds = followEntities.stream()
-                .map(entity -> entity.getFollowerId())
-                .toList();
+        // 팔로워 가져오기
+        Map<Long, FollowEntity> followers = 
+                followRepository.findByFollowingId(userId).stream()
+                        .collect(Collectors.toMap(FollowEntity::getFollowingId, Function.identity()));
 
-        // 팔로워만 추출하여 리턴
-        return userRepository.findAllById(followerIds).stream()
-                .map(user -> new Follow(user, null))
+        // 팔로워 정보 얻기
+        return userRepository.findAllById(followers.keySet()).stream()
+                .map(user ->
+                        Follow.builder()
+                                .followId(user.getId())
+                                .username(user.getUsername())
+                                .createdAt(followers.get(user.getId()).getCreatedAt())
+                                .build()
+                )
                 .toList();
     }
 
@@ -56,15 +65,19 @@ public class FollowService {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
-        // 팔로잉 가져오기 및 유저 아이디 리스트로 저장
-        List<FollowEntity> followEntities = followRepository.findByFollowerId(userId);
-        List<Long> followerIds = followEntities.stream()
-                .map(entity -> entity.getFollowingId())
-                .toList();
+        // 팔로잉 가져오기
+        Map<Long, FollowEntity> followings =
+                followRepository.findByFollowerId(userId).stream()
+                        .collect(Collectors.toMap(FollowEntity::getFollowingId, Function.identity()));
 
-        // 팔로잉만 추출하여 리턴
-        return userRepository.findAllById(followerIds).stream()
-                .map(user -> new Follow(null, user))
+        //  팔로잉 정보 얻기
+        return userRepository.findAllById(followings.keySet()).stream()
+                .map(user ->
+                        Follow.builder()
+                                .followId(user.getId())
+                                .username(user.getUsername())
+                                .build()
+                )
                 .toList();
     }
 
