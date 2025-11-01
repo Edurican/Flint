@@ -2,6 +2,8 @@ package com.edurican.flint.core.api.controller.v1.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.internal.build.AllowNonPortable;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
 // CUD는 리폰을 만들지 않는다.
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class CommentResponse {
     private Long id;
     private Long userId;

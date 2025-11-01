@@ -2,7 +2,9 @@ package com.edurican.flint.storage;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.awt.print.Pageable;
+//import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
+//import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {

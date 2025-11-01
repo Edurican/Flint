@@ -8,10 +8,13 @@ import lombok.Setter;
 @Setter
 public class SignupRequestDto {
 
-    @NotBlank(message = "아이디를 입력해주세요.")
+    @NotBlank(message = "이메일은 필수 입력 값입니다.")
+    private String email;
+
+    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String username;
 
-    @NotBlank(message = "비밀번호를 입력해주세요.")
+    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
     private String password;
 
 }

@@ -1,5 +1,6 @@
 package com.edurican.flint.storage;
 
+import com.edurican.flint.core.enums.UserRoleEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,9 +32,14 @@ public class UserEntity extends BaseSoftEntity {
     @Column(name = "following_count", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer followingCount;
 
-    public UserEntity(String username, String password) {
+    @Column(name = "role", nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private UserRoleEnum role;
+
+    public UserEntity(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;
+        this.email = email;
+        this.role = role;
     }
-
 }

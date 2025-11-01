@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
@@ -22,12 +23,12 @@ public class JwtUtil {
     private String secretKey;
 
     private Key key;
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.ES256;
+    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
     // 키를 Base64로 디코딩 하여 Key 생성
     @jakarta.annotation.PostConstruct
     public void init() {
-        byte[] bytes = Base64.getDecoder().decode(secretKey);
+        byte[] bytes = secretKey.getBytes(StandardCharsets.UTF_8);
         key = Keys.hmacShaKeyFor(bytes);
     }
 
@@ -36,7 +37,7 @@ public class JwtUtil {
     * */
     public String createJwtToken(String username) {
         Date date = new Date();
-        long TOKEN_TIME = 60 * 60 * 1L;
+        long TOKEN_TIME = 60 * 60 * 1000L; // 1시간
 
         return Jwts.builder()
                 .setSubject(username) // 사용자 이름
