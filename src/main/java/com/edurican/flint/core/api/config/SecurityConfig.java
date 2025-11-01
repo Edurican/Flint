@@ -1,5 +1,9 @@
 package com.edurican.flint.core.api.config;
 
+import com.edurican.flint.core.support.auth.JwtAuthenticationFilter;
+import com.edurican.flint.core.support.auth.JwtUtil;
+import com.edurican.flint.storage.UserRepository;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +16,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final JwtUtil  jwtUtil;
+    private final UserRepository userRepository;
+    private final JwtAuthenticationFilter  jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtUtil jwtUtil, UserRepository userRepository,  JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -32,6 +46,8 @@ public class SecurityConfig {
 
         // 우선 모두에게 API 접근 허용(추후 수정)
         http.authorizeHttpRequests(authz -> authz
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .anyRequest().permitAll()
         );
 
