@@ -49,7 +49,7 @@ public class UserService {
         String email = loginRequestDto.getEmail();
         String password = loginRequestDto.getPassword();
 
-        UserEntity user = userRepository.findByUsername(email).orElseThrow(
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
         );
 

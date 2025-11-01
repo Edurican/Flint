@@ -44,7 +44,7 @@ public class UserController {
     })
     public ApiResult<String> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
             String token = userService.login(loginRequestDto);
-            return ApiResult.success("로그인에 성공했습니다.");
+            return ApiResult.success(token);
         }
     }
 
