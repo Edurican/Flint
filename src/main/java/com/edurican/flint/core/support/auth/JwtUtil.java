@@ -50,6 +50,6 @@ public class JwtUtil {
     // JWT 검증 및 정보 추출
     public Claims getUserFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJwt(token).getBody();
+                .parseClaimsJws(token).getBody();
     }
 }
