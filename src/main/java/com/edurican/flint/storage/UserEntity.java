@@ -27,10 +27,10 @@ public class UserEntity extends BaseSoftEntity {
     private String bio;
 
     @Column(name = "follower_count", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer followersCount;
+    private Integer followersCount = 0;
 
     @Column(name = "following_count", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer followingCount;
+    private Integer followingCount = 0;
 
     @Column(name = "role", nullable = false)
     @Enumerated(value = EnumType.STRING)
