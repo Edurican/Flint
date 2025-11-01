@@ -14,25 +14,26 @@ import lombok.Setter;
         @Index(name = "idx_posts_topic_id", columnList = "topic_id") })
 public class PostEntity extends BaseSoftEntity{
 
-    @Column(name = "content", length = 100)
+    @Column(name = "content", length = 100, nullable = false)
     private String content;
 
-    @Column(name = "user_id" )
+    @Column(name = "user_id", nullable = false )
     private Long userId;
 
-    @Column(name = "topic_id", nullable=true)
+    @Column(name = "topic_id", nullable=false )
     private Long topicId;
 
-    @Column(name = "view_count")
+    @Column(name = "comment_count", nullable=false)
+    private Integer commentCount;
+
+    @Column(name = "view_count", nullable=false)
     private Integer viewCount;
 
-    @Column(name = "like_count")
+    @Column(name = "like_count", nullable=false)
     private Integer likeCount;
 
-    @Column(name = "respark_count")
+    @Column(name = "respark_count", nullable=false)
     private Integer resparkCount;
-
-
 
 
 }
