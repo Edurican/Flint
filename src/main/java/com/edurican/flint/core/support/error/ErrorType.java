@@ -7,7 +7,8 @@ public enum ErrorType {
 
     DEFAULT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "An unexpected error has occurred.", LogLevel.ERROR),
     USER_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "User not found.", LogLevel.ERROR),
-    FOLLOW_IS_ALREADY(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.F5000, "An unexpected error has occurred.", LogLevel.WARN);
+    FOLLOW_IS_ALREADY(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.F5000, "An unexpected error has occurred.", LogLevel.WARN),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Comment not found.", LogLevel.ERROR);
 
     private final HttpStatus status;
 

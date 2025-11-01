@@ -10,68 +10,97 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@RestController // 리스폰스 바디 + 컨트롤러@
-@RequiredArgsConstructor // 필요한 생성자를 자동으로 만들어줌
-@RequestMapping("/api/v1/comment")
+@RestController
 public class CommentController {
-    
-    private final CommentService commentService; // 이렇게 DI 받는다(외워) service 매서드 불러오기.
 
-    // 댓글 등록
-    @PostMapping
+    private final CommentService commentService;
+
+    @Autowired
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
+    /**
+     * 댓글 등록
+     */
+    @PostMapping("/api/v1/{postId}/comments")
     @Operation(summary = "댓글 등록", description = "게시글에 댓글을 등록합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "댓글 등록 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommentResponse.class)))
+            @ApiResponse(responseCode = "200", description = "댓글 등록 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentResponse.class)))
     })
-    public ApiResult<CommentResponse> createComment(@RequestBody CreateCommentRequest request) {
-        CommentResponse result = commentService.createComment(request);
-        return ApiResult.success(result);
-    }
+    public ApiResult<Boolean> createComment(
+            @PathVariable Long postId,
+            @RequestBody CreateCommentRequest request) {
+        long userId = 1; // 임시 userId
 
-    // 댓글 수정
-    @PatchMapping
+            commentService.createComment(userId, postId, request);
+            return ApiResult.success(true);
+        }
+    /**
+     * 댓글 수정
+     */
+    @PatchMapping("/api/v1/comment/{commentId}")
     @Operation(summary = "댓글 수정", description = "기존 댓글 내용을 수정합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "댓글 수정 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommentResponse.class)))
+            @ApiResponse(responseCode = "200", description = "댓글 수정 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentResponse.class)))
     })
-    public ApiResult<CommentResponse> updateComment(@RequestBody UpdateCommentRequest request) {
-        CommentResponse result = commentService.updateComment(request);
-        return ApiResult.success(result);
+    public ApiResult<Boolean> updateComment(
+            @PathVariable Long commentId,
+            @RequestBody UpdateCommentRequest request) {
+        long userId = 1; // 임시 userId
+            commentService.updateComment(userId, commentId, request);
+            return ApiResult.success(true);
     }
-
-    // 댓글 삭제
-    @DeleteMapping("/{commentId}")
+    /**
+     * 댓글 삭제
+     */
+    @DeleteMapping("/api/v1/comment/{commentId}")
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
-    @ApiResponses(value ={
-            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공", content = @Content)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class)))
     })
-    public ApiResult<Void> delete(CommentResponse request) {
-        commentService.deleteComment(request);
-        return ApiResult.success(null);
+    public ApiResult<Boolean> deleteComment(@PathVariable Long commentId) {
+        long userId = 1; // 임시 userId
+        commentService.deleteComment(userId, commentId);
+        return ApiResult.success(true);
     }
-
-    // 댓글 좋아요
-    @PostMapping("/{commentId}/like")
+    /**
+     * 댓글 좋아요
+     */
+    @PostMapping("/api/v1/comment/{commentId}/like")
     @Operation(summary = "댓글 좋아요", description = "댓글에 좋아요를 추가합니다.")
-    @ApiResponses(value ={
-            @ApiResponse(responseCode = "200", description = "좋아요 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommentResponse.class)))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "좋아요 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class)))
     })
-    public ApiResult<CommentResponse> likeComment(@PathVariable Long commentId) {
-        CommentResponse result = commentService.likeComment(commentId);
-        return ApiResult.success(result);
+    public ApiResult<Boolean> likeComment(@PathVariable Long commentId) {
+        long userId = 1; // 임시 userId
+        commentService.likeComment(userId, commentId);
+        return ApiResult.success(true);
     }
-
-    // 댓글 좋아요 취소
-    @DeleteMapping("/{commentId}/unlike")
+    /**
+     * 댓글 좋아요 취소
+     */
+    @DeleteMapping("/api/v1/comment/{commentId}/like")
     @Operation(summary = "댓글 좋아요 취소", description = "댓글의 좋아요를 취소합니다.")
-    @ApiResponses(value ={
-            @ApiResponse(responseCode = "200", description = "좋아요 취소 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommentResponse.class)))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "좋아요 취소 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class)))
     })
-    public ApiResult<CommentResponse> unlikeComment(@PathVariable Long commentId) {
-        CommentResponse result = commentService.unlikeComment(commentId);
-        return ApiResult.success(result);
+    public ApiResult<Boolean> unlikeComment(@PathVariable Long commentId) {
+        long userId = 1; // 임시 userId
+        commentService.likeComment(userId, commentId);
+        return ApiResult.success(true);
     }
 }
