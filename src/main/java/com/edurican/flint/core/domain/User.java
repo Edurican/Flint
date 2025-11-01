@@ -1,5 +1,6 @@
 package com.edurican.flint.core.domain;
 
+import com.edurican.flint.core.enums.UserRoleEnum;
 import com.edurican.flint.storage.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,8 @@ public class User {
     private String email;
 
     private String bio;
+
+    private UserRoleEnum role;
 
     private Integer followersCount;
 

@@ -35,9 +35,12 @@ import java.io.IOException;
 
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-            String token = request.getHeader("Authorization");
+            String tokenValue = request.getHeader("Authorization");
 
-            if (token != null && token.startsWith("Bearer ")) {
+            // 인증 방식의 종류를 알려주는 'Bearer'를 토큰에 삽입(추출 할 때에는 파싱)
+            if (tokenValue != null && tokenValue.startsWith("Bearer ")) {
+                String token = tokenValue.substring(7);
+
                 try {
                     Claims userInfo = jwtUtil.getUserFromJwtToken(token);
                     String username = userInfo.getSubject();
