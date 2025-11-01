@@ -47,7 +47,7 @@ public class CommentService {
     @Transactional
     public void updateComment(Long userId, Long commentId, UpdateCommentRequest request) {
         // 댓글 존재 확인 및 작성자 확인
-        CommentEntity comment = commentRepository.findByUserIdAndCommentId(userId, commentId);
+        CommentEntity comment = commentRepository.findByIdAndUserId(userId, commentId);
 
         if (comment == null || !comment.isActive()) {
             throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
@@ -68,7 +68,7 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
         // 댓글 존재 확인 및 작성자 확인
-        CommentEntity comment = commentRepository.findByUserIdAndCommentId(userId, commentId);
+        CommentEntity comment = commentRepository.findByIdAndUserId(userId, commentId);
 
         if (comment == null || !comment.isActive()) {
             throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
