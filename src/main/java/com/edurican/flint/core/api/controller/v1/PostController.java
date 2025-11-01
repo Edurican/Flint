@@ -29,7 +29,7 @@ public class PostController
     @Operation(summary = "스파크 등록", description = "스파크(게시물) 등록")
     public ApiResult<Boolean> createPost(
         @RequestParam Long userId,
-        @RequestParam @Size(max = 100)String content,
+        @RequestParam @Size(max = 100) String content,
         @RequestParam Long topicId
         )
     {

@@ -15,7 +15,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TopicEntity extends BaseEntity {
 
-    @Column(name = "topic", nullable = true)
+    @Column(name = "topic")
     private String topic;
 
 }
