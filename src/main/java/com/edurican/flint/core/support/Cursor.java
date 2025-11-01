@@ -14,4 +14,5 @@ import java.util.List;
 public class Cursor<T> {
     private List<T> contents;
     private Long lastFetchedId;
+    private Boolean hasNext;
 }

@@ -1,5 +1,6 @@
 package com.edurican.flint.core.support.response;
 
+import com.edurican.flint.core.support.Cursor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,4 +15,5 @@ import java.util.List;
 public class CursorResponse<T> {
     private List<T> contents;
     private Long lastFetchedId;
+    private Boolean hasNext;
 }

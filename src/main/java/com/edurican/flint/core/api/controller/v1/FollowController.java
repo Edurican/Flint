@@ -4,8 +4,11 @@ import com.edurican.flint.core.api.controller.v1.response.ExampleResponseDto;
 import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
 import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.FollowService;
+import com.edurican.flint.core.support.Cursor;
+import com.edurican.flint.core.support.OffsetLimit;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.response.ApiResult;
+import com.edurican.flint.core.support.response.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,19 +37,14 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
     })
-    public ApiResult<List<FollowResponse>> getFollowers(@PathVariable Long userId) {
-        List<Follow> follows = followService.getFollowers(userId);
-        List<FollowResponse> followers = follows.stream()
-                .map(follow ->
-                        FollowResponse.builder()
-                                .followId(follow.getFollowId())
-                                .username(follow.getUsername())
-                                .createdAt(follow.getCreatedAt())
-                                .build()
-                )
-                .toList();
-
-        return ApiResult.success(followers);
+    public ApiResult<CursorResponse<FollowResponse>> getFollowers(
+            @PathVariable Long userId,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    ) {
+        Cursor<Follow> follows = followService.getFollowers(userId, lastFetchedId, limit);
+        List<FollowResponse> followers = follows.getContents().stream().map(FollowResponse::of).toList();
+        return ApiResult.success(new CursorResponse(followers, follows.getLastFetchedId(), follows.getHasNext()));
     }
 
     @GetMapping("/api/v1/{userId}/following")
@@ -54,19 +52,14 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
     })
-    public ApiResult<List<FollowResponse>> getFollowing(@PathVariable Long userId) {
-        List<Follow> follows = followService.getFollowing(userId);
-        List<FollowResponse> following = follows.stream()
-                .map(follow ->
-                        FollowResponse.builder()
-                                .followId(follow.getFollowId())
-                                .username(follow.getUsername())
-                                .createdAt(follow.getCreatedAt())
-                                .build()
-                )
-                .toList();
-
-        return ApiResult.success(following);
+    public ApiResult<CursorResponse<FollowResponse>> getFollowing(
+            @PathVariable Long userId,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    ) {
+        Cursor<Follow> follows = followService.getFollowing(userId, lastFetchedId, limit);
+        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
+        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
     }
 
     @PostMapping("/api/v1/{followId}/follow")

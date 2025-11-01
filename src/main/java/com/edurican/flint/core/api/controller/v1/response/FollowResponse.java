@@ -7,13 +7,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class FollowResponse {
+    private Long id;
     private Long followId;
     private String username;
-    private LocalDateTime createdAt;
+    private LocalDateTime followedAt;
+
+    public static FollowResponse of(Follow follow) {
+        return new FollowResponse(follow.getId(), follow.getFollowId(), follow.getUsername(), follow.getFollowedAt());
+    }
+
+    public static List<FollowResponse> of(List<Follow> follows) {
+        return follows.stream().map(FollowResponse::of).toList();
+    }
 }

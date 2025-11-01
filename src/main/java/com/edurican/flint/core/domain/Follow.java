@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Follow {
+    private Long id;
     private Long followId;
     private String username;
-    private LocalDateTime createdAt;
+    private LocalDateTime followedAt;
 }
