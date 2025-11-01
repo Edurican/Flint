@@ -10,8 +10,8 @@ import java.util.Date;
 @Entity
 @Getter
 @NoArgsConstructor
-public class UserEntity extends BaseEntity{
-
+@Table(name = "users")
+public class UserEntity extends BaseSoftEntity {
 
     @Column(name = "user_name", unique = true)
     private String username;

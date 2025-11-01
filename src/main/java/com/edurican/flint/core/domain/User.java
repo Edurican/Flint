@@ -6,15 +6,21 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Follow {
-    private Long id;
-    private Long followId;
+public class User {
+
     private String username;
-    private LocalDateTime followedAt;
+
+    private String password;
+
+    private String email;
+
+    private String bio;
+
+    private Integer followersCount;
+
+    private Integer followingCount;
+
 }
