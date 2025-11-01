@@ -12,4 +12,8 @@ public enum ErrorCode {
 
     // Follow (5000)
     F5000,
+
+    // comment (6000)
+    C6000,
+
 }

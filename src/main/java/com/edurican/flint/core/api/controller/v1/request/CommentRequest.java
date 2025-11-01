@@ -2,18 +2,13 @@ package com.edurican.flint.core.api.controller.v1.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import lombok.NonNull;
 
 @Data
 public class CommentRequest {
-
-    @NonNull
-    private String postId;
+    private Long postId;
 
     private Long parentCommentId;
 
-    @NotBlank
+    @NotBlank(message = "댓글을 작성해주세요.")
     private String comment;
-
-
 }

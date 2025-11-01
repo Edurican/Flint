@@ -5,8 +5,6 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-// @Getter + @Setter = @Data
-// CUD는 리폰을 만들지 않는다.
 @Getter
 @AllArgsConstructor
 public class CommentResponse {

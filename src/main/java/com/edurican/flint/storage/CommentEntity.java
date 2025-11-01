@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "comments")
 public class CommentEntity extends BaseSoftEntity {
 
     @Column(name = "user_id",  nullable = false)
     private Long userId;
-
 
     @Column(name = "post_id", nullable = false)
     private Long postId;
