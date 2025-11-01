@@ -5,7 +5,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface UserTopicRepository extends JpaRepository<UserTopicEntity, Long> {
+
+    List<UserTopicEntity> findByUserIdOrderByScoreDesc(Long userId);
 
     UserTopicEntity findByUserIdAndTopicId(Long userId, Long topicId);
 
