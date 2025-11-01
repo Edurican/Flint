@@ -65,7 +65,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authz -> authz
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
-//                .anyRequest().permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/api-docs/json/**").permitAll()
                 .anyRequest().authenticated() // auth 제외하고 모든 요청을 인증 받아야 함. (개발 단계이므로 일단 모두 허용)
         );
 
