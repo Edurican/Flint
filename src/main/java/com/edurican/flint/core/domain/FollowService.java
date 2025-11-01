@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -64,7 +65,7 @@ public class FollowService {
                 .map(follow -> Follow.builder()
                         .id(follow.getId())
                         .followId(follow.getFollowerId())
-                        .username(users.get(follow.getFollowerId()).getUsername())
+                        .username(users.get(follow.getFollowerId()) == null ? "" : users.get(follow.getFollowerId()).getUsername())
                         .followedAt(follow.getCreatedAt())
                         .build()
                 )
@@ -91,7 +92,7 @@ public class FollowService {
         Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, limit);
 
         // 유저 정보를 얻기 위한 Id 분리
-        List<Long> followerIds = following.getContent().stream().map(FollowEntity::getFollowerId).toList();
+        List<Long> followerIds = following.getContent().stream().map(FollowEntity::getFollowingId).toList();
 
         // 유저 정보 얻기
         Map<Long, UserEntity> users = userRepository.findAllById(followerIds).stream().collect(Collectors.toMap(UserEntity::getId, Function.identity()));
@@ -100,8 +101,8 @@ public class FollowService {
         List<Follow> follows = following.getContent().stream()
                 .map(follow -> Follow.builder()
                         .id(follow.getId())
-                        .followId(follow.getFollowerId())
-                        .username(users.get(follow.getFollowerId()).getUsername())
+                        .followId(follow.getFollowingId())
+                        .username(users.get(follow.getFollowingId()) == null ? "" : users.get(follow.getFollowingId()).getUsername())
                         .followedAt(follow.getCreatedAt())
                         .build()
                 )
