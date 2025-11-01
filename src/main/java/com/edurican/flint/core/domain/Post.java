@@ -27,7 +27,7 @@ public class Post {
     private LocalDateTime createdAt;
 
     public static Post of(PostEntity postEntity) {
-
+        return new Post();
     }
 }
 
