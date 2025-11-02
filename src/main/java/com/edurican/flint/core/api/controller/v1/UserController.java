@@ -2,7 +2,6 @@ package com.edurican.flint.core.api.controller.v1;
 
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
-import com.edurican.flint.core.api.controller.v1.response.ExampleResponseDto;
 import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
 import com.edurican.flint.core.domain.UserService;
 import com.edurican.flint.core.support.response.ApiResult;
@@ -29,7 +28,7 @@ public class UserController {
     @PostMapping("/api/v1/auth/signup")
     @Operation(summary = "회원 가입", description = "회원 가입")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
     })
     public ApiResult<String> signup(@Valid @RequestBody SignupRequestDto signupRequestDto) {
 
@@ -40,7 +39,7 @@ public class UserController {
     @PostMapping("/api/v1/auth/login")
     @Operation(summary = "로그인", description = "로그인")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExampleResponseDto.class))})
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
     })
     public ApiResult<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
 
@@ -49,7 +48,7 @@ public class UserController {
         return ApiResult.success(loginResponseDto);
 
         //            String token = userService.login(loginRequestDto);
-//            return ApiResult.success(token);
+        //            return ApiResult.success(token);
         }
     }
 
