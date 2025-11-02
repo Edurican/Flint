@@ -4,6 +4,7 @@ import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
 import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.FollowService;
 import com.edurican.flint.core.support.Cursor;
+import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.core.support.response.ApiResult;
 import com.edurican.flint.core.support.response.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +35,7 @@ public class FollowController {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
     })
     public ApiResult<CursorResponse<FollowResponse>> getFollowers(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long userId,
             @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
@@ -48,6 +51,7 @@ public class FollowController {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
     })
     public ApiResult<CursorResponse<FollowResponse>> getFollowing(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long userId,
             @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
@@ -62,9 +66,11 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))})
     })
-    public ApiResult<Boolean> follow(@PathVariable Long followId) {
-        long userId = 1;
-        followService.follow(userId, followId);
+    public ApiResult<Boolean> follow(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long followId
+    ) {
+        followService.follow(userDetails.getUser().getId(), followId);
         return ApiResult.success(true);
     }
 
@@ -73,9 +79,11 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))})
     })
-    public ApiResult<Boolean> unfollow(@PathVariable Long unfollowId) {
-        long userId = 1;
-        followService.unfollow(userId, unfollowId);
+    public ApiResult<Boolean> unfollow(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long unfollowId
+    ) {
+        followService.unfollow(userDetails.getUser().getId(), unfollowId);
         return ApiResult.success(true);
     }
 
