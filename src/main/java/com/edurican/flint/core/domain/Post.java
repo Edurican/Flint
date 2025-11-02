@@ -27,7 +27,19 @@ public class Post {
     private LocalDateTime createdAt;
 
     public static Post of(PostEntity postEntity) {
-        return new Post();
+        Post post = new Post();
+        post.id = postEntity.getId();
+        post.content = postEntity.getContent();
+        post.userId = postEntity.getUserId();
+        post.topicId = postEntity.getTopicId();
+        post.viewCount = postEntity.getViewCount();
+        post.commentCount = postEntity.getCommentCount();
+        post.likeCount = postEntity.getLikeCount();
+        post.resparkCount = postEntity.getResparkCount();
+        post.status = postEntity.getStatus().toString();
+        post.updatedAt = postEntity.getUpdatedAt();
+        post.createdAt = postEntity.getCreatedAt();
+        return post;
     }
 
 }
