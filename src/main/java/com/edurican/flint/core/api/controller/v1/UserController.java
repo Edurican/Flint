@@ -2,6 +2,7 @@ package com.edurican.flint.core.api.controller.v1;
 
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
+import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
 import com.edurican.flint.core.domain.UserService;
 import com.edurican.flint.core.support.response.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,9 +41,14 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
     })
-    public ApiResult<String> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
-            String token = userService.login(loginRequestDto);
-            return ApiResult.success(token);
+    public ApiResult<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+
+        LoginResponseDto loginResponseDto = userService.login(loginRequestDto);
+
+        return ApiResult.success(loginResponseDto);
+
+        //            String token = userService.login(loginRequestDto);
+        //            return ApiResult.success(token);
         }
     }
 
