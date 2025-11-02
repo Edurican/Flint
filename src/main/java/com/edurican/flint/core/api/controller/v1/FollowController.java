@@ -1,12 +1,9 @@
 package com.edurican.flint.core.api.controller.v1;
 
-import com.edurican.flint.core.api.controller.v1.response.ExampleResponseDto;
 import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
 import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.FollowService;
 import com.edurican.flint.core.support.Cursor;
-import com.edurican.flint.core.support.OffsetLimit;
-import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.response.ApiResult;
 import com.edurican.flint.core.support.response.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,8 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

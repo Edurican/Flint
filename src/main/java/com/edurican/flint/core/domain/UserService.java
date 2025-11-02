@@ -3,8 +3,11 @@ package com.edurican.flint.core.domain;
 
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
+import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
 import com.edurican.flint.core.enums.UserRoleEnum;
 import com.edurican.flint.core.support.auth.JwtUtil;
+import com.edurican.flint.core.support.error.CoreException;
+import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.UserEntity;
 import com.edurican.flint.storage.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,12 +35,12 @@ public class UserService {
 
         userRepository.findByUsername(username)
                 .ifPresent(user -> {
-                    throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+                    throw new CoreException(ErrorType.USER_DUPLICATE_USERNAME);
                 });
 
         userRepository.findByEmail(email)
                 .ifPresent(user -> {
-                    throw new IllegalArgumentException("등록된 이메일입니다.");
+                    throw new CoreException(ErrorType.USER_DUPLICATE_EMAIL);
                 });
 
         UserEntity user = new UserEntity(username, password, email, role);
@@ -45,21 +48,24 @@ public class UserService {
     }
 
     /* 로그인 서비스 */
-    public String login(LoginRequestDto loginRequestDto) {
+    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
         String email = loginRequestDto.getEmail();
         String password = loginRequestDto.getPassword();
 
         UserEntity user = userRepository.findByEmail(email).orElseThrow(
-                () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
+                () -> new CoreException(ErrorType.USER_NOT_FOUND_BY_EMAIL)
         );
 
         if(!passwordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CoreException(ErrorType.USER_PASSWORD_MISMATCH);
         }
 
         String token = jwtUtil.createJwtToken(user.getUsername());
+        System.out.println("🔹 로그인 시도: " + email);
+        System.out.println("🔹 DB 비밀번호: " + user.getPassword());
+        System.out.println("🔹 입력 비밀번호 일치? " + passwordEncoder.matches(password, user.getPassword()));
 
-        return token;
+        return new LoginResponseDto(token, user.getUsername());
 
     }
 }

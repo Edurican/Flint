@@ -28,7 +28,8 @@ public class JwtUtil {
     // 키를 Base64로 디코딩 하여 Key 생성
     @jakarta.annotation.PostConstruct
     public void init() {
-        byte[] bytes = secretKey.getBytes(StandardCharsets.UTF_8);
+//        byte[] bytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = Base64.getDecoder().decode(secretKey);
         key = Keys.hmacShaKeyFor(bytes);
     }
 

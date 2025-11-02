@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "PostLikes")
+@Table(name = "post_likes")
 public class PostLikeEntity extends BaseEntity{
     @Column(name = "post_id")
     private Long postId;
