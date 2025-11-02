@@ -88,8 +88,9 @@ public class PostController
         return ApiResult.success(posts.stream().map(PostResponse::from).toList());
     }
 
-    @GetMapping("/api/v1/posts/{userId}")
-    @Operation(summary = "특정 유저 스파크 조회", description = "특정 토픽별 스파크(게시물) 목록 조회")
+
+    @GetMapping("/api/v1/users/{userId}/posts")
+    @Operation(summary = "특정 유저 스파크 조회", description = "특정 유저별 스파크(게시물) 목록 조회")
     public ApiResult<List<PostResponse>> getPostsByUserId(@PathVariable Long userId){
         List<Post> posts = this.postService.getPostsByUserId(userId);
         return ApiResult.success(posts.stream().map(PostResponse::from).toList());
