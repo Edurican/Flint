@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CommentResponse {
     private Long id;
-    private Long userId;
+    private String userId;
     private Long postId;
-    private Long parentCommentId;
+    private Long parentId;
     private String content;
     private Integer likeCount;
     private LocalDateTime createdAt;

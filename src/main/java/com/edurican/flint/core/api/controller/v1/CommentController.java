@@ -68,10 +68,10 @@ public class CommentController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Boolean.class)))
     })
-    public ApiResult<Boolean> deleteComment(@PathVariable Long commentId) {
+    public ApiResult<Void> deleteComment(@PathVariable Long commentId) {
         long userId = 1; // 임시 userId
         commentService.deleteComment(userId, commentId);
-        return ApiResult.success(true);
+        return ApiResult.success(null);
     }
     /**
      * 댓글 좋아요
