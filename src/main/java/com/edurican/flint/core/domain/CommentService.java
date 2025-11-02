@@ -3,6 +3,7 @@ package com.edurican.flint.core.domain;
 
 import com.edurican.flint.core.api.controller.v1.request.CreateCommentRequest;
 import com.edurican.flint.core.api.controller.v1.request.UpdateCommentRequest;
+import com.edurican.flint.core.api.controller.v1.response.CommentResponse;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.*;
@@ -31,37 +32,77 @@ public class CommentService {
      * 댓글 등록
      */
     @Transactional
-    public void createComment(Long userId, Long postId, CreateCommentRequest request) {
+    public CommentResponse createComment(Long userId, Long postId, CreateCommentRequest request) {
         // 유저 존재 확인
-        UserEntity user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+        // 부모 댓글 검증
+        Long parentCommentId = request.getParentId();
+        String content = request.getContent();
 
-        // 댓글 생성 및 저장
-        CommentEntity commentEntity = new CommentEntity(userId, postId, request.getParentCommentId(), request.getContent(), 0);
+//        if (content == null || content.isBlank()) {
+//            throw new CoreException(ErrorTypec.USER_NOT_FOUND); // INVALID_CONTENT
+//        }
 
-        commentRepository.save(commentEntity);
+        if (parentCommentId == null) {
+            CommentEntity comment = new CommentEntity(userId, postId, null, content);
+        }
+        if (parentCommentId != null) {
+            CommentEntity parent = commentRepository.findById(parentCommentId)
+                    .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
+
+            if (!parent.isActive()) throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
+
+            // 부모 댓글이 같은 게시글에 속해야 함
+            if (!parent.getPostId().equals(postId))
+                throw new CoreException(ErrorType.DEFAULT_ERROR);
+        }
+
+        Long grandParentId = commentRepository.findParentIdById(parentCommentId);
+        if (grandParentId != null) {
+            // grandParent의 parentId 조회
+            Long greatGrandParent = commentRepository.findParentIdById(grandParentId);
+            if (greatGrandParent != null) {
+                throw new CoreException(ErrorType.DEFAULT_ERROR); // COMMENT_DEPTH_EXCEEDED
+            }
+        }
+
+        // 댓글 생성, 저장
+        CommentEntity comment = new CommentEntity(userId, postId, parentCommentId, request.getContent());
+        commentRepository.save(comment);
+
+        return new CommentResponse(
+                comment.getId(),
+                String.valueOf(comment.getUserId()),
+                comment.getPostId(),
+                comment.getParentCommentId(),
+                comment.getContent(),
+                comment.getLikeCount(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt()
+        );
     }
+
     /**
      * 댓글 수정
      */
     @Transactional
     public void updateComment(Long userId, Long commentId, UpdateCommentRequest request) {
         // 댓글 존재 확인 및 작성자 확인
-        CommentEntity comment = commentRepository.findByIdAndUserId(userId, commentId);
-
-        if (comment == null || !comment.isActive()) {
-            throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
-        }
-
-        // 유저 정보 가져오기
-        UserEntity user = userRepository.findById(userId)
+        CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        // 댓글 수정
-        CommentEntity commentEntity = new CommentEntity(userId, commentId, request.getParentCommentId(), request.getContent(), 0);
+        if (!comment.isActive()) {
+            throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
+        }
+        // 작성자 검증
+        if (!comment.getUserId().equals(userId)) {
+            throw new CoreException(ErrorType.DEFAULT_ERROR);
+        }
 
-        commentRepository.save(commentEntity);
+        comment.updateContent(request.getContent());
     }
+
     /**
      * 댓글 삭제
      */
@@ -70,12 +111,17 @@ public class CommentService {
         // 댓글 존재 확인 및 작성자 확인
         CommentEntity comment = commentRepository.findByIdAndUserId(userId, commentId);
 
-        if (comment == null || !comment.isActive()) {
+        if (!comment.isActive()) {
             throw new CoreException(ErrorType.COMMENT_NOT_FOUND);
+        }
+        // 작성자 검증
+        if (!comment.getUserId().equals(userId)) {
+            throw new CoreException(ErrorType.DEFAULT_ERROR);
         }
 
         // Soft Delete
         comment.deleted();
+        // 핗여없음 변경감지
         commentRepository.save(comment);
     }
     /**
