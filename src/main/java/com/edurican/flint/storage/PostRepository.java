@@ -13,8 +13,11 @@ public interface PostRepository extends JpaRepository<PostEntity,Long> {
     List<PostEntity> findByUserId(Long userId);
     List<PostEntity> findByTopicId(Long topicId);
 
+    @Query("SELECT p FROM PostEntity p WHERE p.id < :cursor ORDER BY p.id DESC LIMIT :limit")
+    Slice<PostEntity> findByWithCursor(@Param("cursor") Long cursor, @Param("limit") Integer limit);
+
     @Query("SELECT p FROM PostEntity p WHERE p.topicId = :topicId AND p.id < :cursor ORDER BY p.id DESC LIMIT :limit")
-    Slice<PostEntity> findByTopicIdWithCursor(@Param("topicId") Long topicId, @Param("cursor") Long cursor, Integer limit);
+    Slice<PostEntity> findByTopicIdWithCursor(@Param("topicId") Long topicId, @Param("cursor") Long cursor, @Param("limit") Integer limit);
 
 
 }
