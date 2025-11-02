@@ -1,9 +1,8 @@
 package com.edurican.flint.core.domain;
 
-import com.edurican.flint.storage.PostEntity;
-import com.edurican.flint.storage.PostRepository;
-import com.edurican.flint.storage.TopicRepository;
-import com.edurican.flint.storage.UserRepository;
+import com.edurican.flint.core.support.error.CoreException;
+import com.edurican.flint.core.support.error.ErrorType;
+import com.edurican.flint.storage.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +28,9 @@ public class PostService {
     @Transactional
     public boolean create(Long userId, String content, Long topicId)
     {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+
         PostEntity post = new PostEntity();
         post.createPost(userId, content, topicId);
 
@@ -113,6 +115,7 @@ public class PostService {
                 .map(this::toPost)
                 .toList();
     }
+
 
 
     private Post toPost(PostEntity e)

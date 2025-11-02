@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-@ApiResponse
 public class PostResponse {
     private Long id;
     private String content;
