@@ -1,11 +1,11 @@
 package com.edurican.flint.core.domain;
 
+import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.*;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,13 +16,13 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TopicRepository topicRepository;
+    private final PostFeed postFeed;
 
-
-
-    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
+        this.postFeed = postFeed;
     }
 
     @Transactional
@@ -74,12 +74,9 @@ public class PostService {
 
     //전체 게시물
     @Transactional
-    public List<Post> getAll()
+    public Cursor<Post> getAll(Long userId, Long lastFetchedId, Integer limit)
     {
-        return this.postRepository.findAll()
-                .stream()
-                .map(this::toPost)
-                .toList();
+        return postFeed.getRecommendFeed(userId, lastFetchedId, limit);
     }
 
     //단건 조회
@@ -107,13 +104,9 @@ public class PostService {
     }
 
     //특정 토픽의 게시물
-    @Transactional
-    public List<Post> getPostsByTopic(Long topicId)
-    {
-        return this.postRepository.findByTopicId(topicId)
-                .stream()
-                .map(this::toPost)
-                .toList();
+    @Transactional(readOnly = true)
+    public Cursor<Post> getPostsByTopic(Long topicId, Long lastFetchedId, Integer limit) {
+        return postFeed.getTopicFeed(topicId, lastFetchedId, limit);
     }
 
 

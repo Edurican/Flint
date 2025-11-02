@@ -5,8 +5,10 @@ import com.edurican.flint.core.api.controller.v1.response.PostResponse;
 import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.Post;
 import com.edurican.flint.core.domain.PostService;
+import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.core.support.response.ApiResult;
+import com.edurican.flint.core.support.response.CursorResponse;
 import com.edurican.flint.storage.PostEntity;
 import com.edurican.flint.storage.PostRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,10 +84,16 @@ public class PostController
 
     @GetMapping("/api/v1/posts/topic/{topicId}")
     @Operation(summary = "특정 토픽별 스파크 조회", description = "특정 토픽별 스파크(게시물) 목록 조회")
-    public ApiResult<List<PostResponse>> getPostsByTopicId(@PathVariable Long topicId)
+    public ApiResult<CursorResponse<PostResponse>> getPostsByTopicId(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long topicId,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    )
     {
-        List<Post> posts = this.postService.getPostsByTopic(topicId);
-        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
+        Cursor<Post> posts = this.postService.getPostsByTopic(topicId, lastFetchedId, limit);
+        List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
+        return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
 
 
@@ -98,10 +106,15 @@ public class PostController
 
     @GetMapping("/api/v1/posts")
     @Operation(summary = "전체 스파크 조회", description = "전체 스파크(게시물) 목록 조회")
-    public ApiResult<List<PostResponse>> getPostAll()
+    public ApiResult<CursorResponse<PostResponse>> getPostAll(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    )
     {
-        List<Post> post = this.postService.getAll();
-        return ApiResult.success(post.stream().map(PostResponse::from).toList());
+        Cursor<Post> posts = this.postService.getAll(userDetails.getUser().getId(), lastFetchedId, limit);
+        List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
+        return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
 
 
