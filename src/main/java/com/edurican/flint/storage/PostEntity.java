@@ -44,4 +44,13 @@ public class PostEntity extends BaseSoftEntity{
         this.content = content;
         this.topicId = topicId;
     }
+    @PrePersist
+    public void postDefault() {
+        if (commentCount == null) commentCount = 0;
+        if (viewCount == null) viewCount = 0;
+        if (likeCount == null) likeCount = 0;
+        if (resparkCount == null) resparkCount = 0;
+        if (getStatus() == null) active();
+    }
+
 }
