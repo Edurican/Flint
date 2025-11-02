@@ -36,7 +36,6 @@ public class UserController {
             return ApiResult.success("회원가입에 성공했습니다.");
     }
 
-    /* UserService에서 Jwt 발급 로직 필요!!! */
     @PostMapping("/api/v1/auth/login")
     @Operation(summary = "로그인", description = "로그인")
     @ApiResponses(value = {
