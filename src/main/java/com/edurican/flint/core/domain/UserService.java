@@ -3,6 +3,7 @@ package com.edurican.flint.core.domain;
 
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
+import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
 import com.edurican.flint.core.enums.UserRoleEnum;
 import com.edurican.flint.core.support.auth.JwtUtil;
 import com.edurican.flint.core.support.error.CoreException;
@@ -47,7 +48,7 @@ public class UserService {
     }
 
     /* 로그인 서비스 */
-    public String login(LoginRequestDto loginRequestDto) {
+    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
         String email = loginRequestDto.getEmail();
         String password = loginRequestDto.getPassword();
 
@@ -64,7 +65,7 @@ public class UserService {
         System.out.println("🔹 DB 비밀번호: " + user.getPassword());
         System.out.println("🔹 입력 비밀번호 일치? " + passwordEncoder.matches(password, user.getPassword()));
 
-        return token;
+        return new LoginResponseDto(token, user.getUsername());
 
     }
 }
