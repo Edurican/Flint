@@ -9,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class PostFeed {
@@ -23,13 +24,35 @@ public class PostFeed {
         this.postRepository = postRepository;
     }
 
-    public Cursor<Post> getRecommendFeed(Long userId) {
-        List<UserTopicEntity> userTopics =  userTopicRepository.findByUserIdOrderByScoreDesc(userId);
+    public Cursor<Post> getRecommendFeed(Long userId, Long lastFetchedId, Integer limit) {
 
-        // 가중치를 설정한다
-        double weight = 1 / userTopics.size();
+        List<UserTopicEntity> userTopics = userTopicRepository.findByUserIdOrderByScoreDesc(userId);
+        double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
 
-        return Cursor.<Post>builder().build();
+        Map<Long, Integer> topicCounts = new HashMap<>();
+        for (int i = 0; i < limit; i++) {
+            double rand = ThreadLocalRandom.current().nextDouble() * totalScore;
+            double cumulative = 0;
+
+            for (UserTopicEntity topic : userTopics) {
+                cumulative += topic.getScore();
+                if (rand < cumulative) {
+                    topicCounts.merge(topic.getTopicId(), 1, Integer::sum);
+                    break;
+                }
+            }
+        }
+
+        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
+        List<Post> posts = topicCounts.entrySet().stream()
+                .flatMap(entry -> getTopicFeed(entry.getKey(), cursor, entry.getValue()).getContents().stream())
+                .sorted(Comparator.comparing(Post::getId).reversed())
+                .limit(limit)
+                .toList();
+
+        Long nextCursor = (posts.isEmpty()) ? null : posts.get(posts.size() - 1).getId();
+        Boolean hasNext = (posts.size() == limit) ? true : false;
+        return new Cursor<>(posts, nextCursor, hasNext);
     }
 
     public Cursor<Post> getTopicFeed(Long topicId, Long lastFetchedId, Integer limit) {
