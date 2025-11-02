@@ -19,6 +19,7 @@ public class PostService {
     private final TopicRepository topicRepository;
 
 
+
     public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
@@ -29,9 +30,7 @@ public class PostService {
     public boolean create(Long userId, String content, Long topicId)
     {
         PostEntity post = new PostEntity();
-        post.setUserId(userId);
-        post.setContent(content);
-        post.setTopicId(topicId);
+        post.createPost(userId, content, topicId);
 
         this.postRepository.save(post);
         return true;
@@ -47,8 +46,8 @@ public class PostService {
             throw new IllegalStateException("수정 권한이 없습니다.");
         }
 
-        post.setContent(content);
-        post.setTopicId(topicId);
+        post.modifyPost(content,topicId);
+
 
         postRepository.save(post);
         return true;

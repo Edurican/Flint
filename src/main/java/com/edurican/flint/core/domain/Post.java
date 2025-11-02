@@ -29,5 +29,6 @@ public class Post {
     public static Post of(PostEntity postEntity) {
         return new Post();
     }
+
 }
 

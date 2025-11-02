@@ -7,7 +7,6 @@ import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @Table(name = "posts",
         indexes = { @Index(name = "idx_posts_user_id", columnList = "user_id"),
@@ -35,5 +34,23 @@ public class PostEntity extends BaseSoftEntity{
     @Column(name = "respark_count", nullable=false)
     private Integer resparkCount;
 
+    public void createPost(Long userId, String content, Long topicId) {
+        this.userId = userId;
+        this.content = content;
+        this.topicId = topicId;
+    }
+
+    public void modifyPost(String content, Long topicId) {
+        this.content = content;
+        this.topicId = topicId;
+    }
+    @PrePersist
+    public void postDefault() {
+        if (commentCount == null) commentCount = 0;
+        if (viewCount == null) viewCount = 0;
+        if (likeCount == null) likeCount = 0;
+        if (resparkCount == null) resparkCount = 0;
+        if (getStatus() == null) active();
+    }
 
 }
