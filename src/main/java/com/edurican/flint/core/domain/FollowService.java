@@ -114,6 +114,23 @@ public class FollowService {
     }
 
     /**
+     * 팔로우 추천 피드
+     */
+    public Cursor<Follow> searchFollow(Long userId, Long lastFetchedId, Integer limit) {
+
+        // 유저 존재하는지 확인
+        if (!userRepository.existsById(userId)) {
+            throw new CoreException(ErrorType.USER_NOT_FOUND);
+        }
+
+        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
+        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, limit);
+
+        List<Follow> follows = new ArrayList<>();
+        return new Cursor<>(follows, 0L, true);
+    }
+
+    /**
      * 팔로우
      */
     @Transactional

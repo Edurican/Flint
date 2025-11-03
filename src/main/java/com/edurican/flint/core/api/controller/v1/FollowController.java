@@ -61,6 +61,21 @@ public class FollowController {
         return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
     }
 
+    @GetMapping("/api/v1/search")
+    @Operation(summary = "팔로우 추천", description = "팔로우 추천 피드")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
+    })
+    public ApiResult<CursorResponse<FollowResponse>> searchFollow(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    ) {
+        Cursor<Follow> follows = followService.searchFollow(userDetails.getUser().getId(), lastFetchedId, limit);
+        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
+        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
+    }
+
     @PostMapping("/api/v1/{followId}/follow")
     @Operation(summary = "팔로워", description = "유저 팔로워하기")
     @ApiResponses(value = {
@@ -86,6 +101,4 @@ public class FollowController {
         followService.unfollow(userDetails.getUser().getId(), unfollowId);
         return ApiResult.success(true);
     }
-
-
 }
