@@ -1,10 +1,14 @@
 package com.edurican.flint.core.api.controller.v1;
 
+import com.edurican.flint.core.api.controller.v1.request.CommentSearchRequest;
 import com.edurican.flint.core.api.controller.v1.request.CreateCommentRequest;
 import com.edurican.flint.core.api.controller.v1.request.UpdateCommentRequest;
+import com.edurican.flint.core.api.controller.v1.response.CommentSearchResponse;
 import com.edurican.flint.core.api.controller.v1.response.CommentResponse;
 import com.edurican.flint.core.domain.CommentService;
+import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.response.ApiResult;
+import com.edurican.flint.core.support.response.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class CommentController {
@@ -102,5 +108,33 @@ public class CommentController {
         long userId = 1; // 임시 userId
         commentService.likeComment(userId, commentId);
         return ApiResult.success(true);
+    }
+    
+    /*
+    * 댓글 조회
+    * */
+    /** 댓글 리스트(전 레벨) 무한 스크롤 조회: postId + lastFetchedId + limit */
+    @GetMapping("/api/v1/comments")
+    @Operation(summary = "댓글 조회", description = "게시글의 모든 댓글을 커서 기반으로 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CursorResponse.class)))
+    })
+    public ApiResult<CursorResponse<CommentSearchResponse>> getComments(
+            @RequestParam Long postId,
+            @RequestParam(required = false) Long lastFetchedId,
+            @RequestParam(defaultValue = "20") Integer limit
+    ) {
+        Cursor<CommentSearchResponse> cur =
+                commentService.getCommentsWithCursor(postId, lastFetchedId, limit);
+
+        CursorResponse<CommentSearchResponse> body = CursorResponse.<CommentSearchResponse>builder()
+                .contents(cur.getContents())
+                .lastFetchedId(cur.getLastFetchedId())
+                .hasNext(cur.getHasNext())
+                .build();
+
+        return ApiResult.success(body);
     }
 }

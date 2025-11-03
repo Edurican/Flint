@@ -12,7 +12,9 @@ public enum ErrorType {
     USER_DUPLICATE_USERNAME(HttpStatus.CONFLICT, ErrorCode.U2000, "Username is already taken.", LogLevel.WARN),
     USER_DUPLICATE_EMAIL(HttpStatus.CONFLICT, ErrorCode.U2000, "Email is already taken.", LogLevel.WARN),
     FOLLOW_IS_ALREADY(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.F5000, "An unexpected error has occurred.", LogLevel.WARN),
-    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Comment not found.", LogLevel.ERROR);
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Comment not found.", LogLevel.ERROR),
+    INVALID_CONTENT(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Invlid comment.", LogLevel.ERROR),
+    COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.C6000, "Comment depth exceeded.", LogLevel.ERROR);
 
     private final HttpStatus status;
 
