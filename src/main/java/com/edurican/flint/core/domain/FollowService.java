@@ -50,7 +50,8 @@ public class FollowService {
 
         // 팔로워 조회
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(userId, cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(userId, cursor, pageable);
 
         // 유저 정보를 얻기 위한 Id 분리
         List<Long> followerIds = followers.getContent().stream()
@@ -90,7 +91,8 @@ public class FollowService {
 
         // 팔로잉 조회
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, pageable);
 
         // 유저 정보를 얻기 위한 Id 분리
         List<Long> followerIds = following.getContent().stream().map(FollowEntity::getFollowingId).toList();
@@ -124,6 +126,7 @@ public class FollowService {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
+        // 팔로우 최신 버전
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
         Pageable pageable = PageRequest.of(0, limit);
         Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(searchUser, cursor, pageable);
