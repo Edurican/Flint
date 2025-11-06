@@ -1,8 +1,10 @@
 package com.edurican.flint.core.api.controller.v1;
 
 import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
+import com.edurican.flint.core.api.controller.v1.response.UserResponse;
 import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.FollowService;
+import com.edurican.flint.core.domain.User;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.core.support.response.ApiResult;
@@ -62,18 +64,19 @@ public class FollowController {
     }
 
     @GetMapping("/api/v1/search")
-    @Operation(summary = "팔로우 추천", description = "팔로우 추천 피드")
+    @Operation(summary = "팔로우 검색", description = "팔로우 검색 피드")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
     })
-    public ApiResult<CursorResponse<FollowResponse>> searchFollow(
+    public ApiResult<CursorResponse<UserResponse>> searchFollow(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(name = "username", required = false) String username,
             @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
     ) {
-        Cursor<Follow> follows = followService.searchFollow(userDetails.getUser().getId(), lastFetchedId, limit);
-        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
-        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
+        Cursor<User> users = followService.searchFollow(userDetails.getUser(), username, lastFetchedId, limit);
+        List<UserResponse> userResponses = users.getContents().stream().map(UserResponse::of).toList();
+        return ApiResult.success(new CursorResponse(userResponses, users.getLastFetchedId(), users.getHasNext()));
     }
 
     @PostMapping("/api/v1/{followId}/follow")

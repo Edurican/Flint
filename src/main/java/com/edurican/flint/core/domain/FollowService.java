@@ -3,6 +3,7 @@ package com.edurican.flint.core.domain;
 
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.OffsetLimit;
+import com.edurican.flint.core.support.Page;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.*;
@@ -116,18 +117,30 @@ public class FollowService {
     /**
      * 팔로우 추천 피드
      */
-    public Cursor<Follow> searchFollow(Long userId, Long lastFetchedId, Integer limit) {
+    public Cursor<User> searchFollow(UserEntity user, String searchUser, Long lastFetchedId, Integer limit) {
 
         // 유저 존재하는지 확인
-        if (!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(user.getId())) {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(searchUser, cursor, pageable);
 
-        List<Follow> follows = new ArrayList<>();
-        return new Cursor<>(follows, 0L, true);
+        // 정보 변환
+        List<User> users = userEntities.getContent().stream()
+                .map(entity -> User.builder()
+                        .id(entity.getId())
+                        .username(entity.getUsername())
+                        .bio(entity.getBio())
+                        .build()
+                )
+                .toList();
+
+        Long nextCursor = (userEntities.getContent().isEmpty()) ? null : userEntities.getContent().get(userEntities.getContent().size() - 1).getId();
+        Boolean hasNext = (userEntities.getContent().size() == limit) ? true : false;
+        return new Cursor<>(users, nextCursor, hasNext);
     }
 
     /**
