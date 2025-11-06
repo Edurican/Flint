@@ -29,7 +29,8 @@ public class PostFeed {
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
 
         List<UserTopicEntity> userTopics = userTopicRepository.findByUserIdOrderByScoreDesc(userId);
-        if(userTopics.isEmpty()) {
+        double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
+        if(userTopics.isEmpty() || userTopics.size() < 3 || totalScore < 20.0) {    // 임시 (데이터가 쌓이지 않았다면)
 
             Slice<PostEntity> postEntities = postRepository.findByWithCursor(cursor, limit);
             List<Post> posts = postEntities.stream()
@@ -40,8 +41,6 @@ public class PostFeed {
             Boolean hasNext = (posts.size() == limit) ? true : false;
             return new Cursor<>(posts, nextCursor, hasNext);
         }
-
-        double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
 
         Map<Long, Integer> topicCounts = new HashMap<>();
         for (int i = 0; i < limit; i++) {

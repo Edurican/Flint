@@ -3,6 +3,7 @@ package com.edurican.flint.core.domain;
 
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.OffsetLimit;
+import com.edurican.flint.core.support.Page;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.*;
@@ -49,7 +50,8 @@ public class FollowService {
 
         // 팔로워 조회
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(userId, cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(userId, cursor, pageable);
 
         // 유저 정보를 얻기 위한 Id 분리
         List<Long> followerIds = followers.getContent().stream()
@@ -89,7 +91,8 @@ public class FollowService {
 
         // 팔로잉 조회
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, pageable);
 
         // 유저 정보를 얻기 위한 Id 분리
         List<Long> followerIds = following.getContent().stream().map(FollowEntity::getFollowingId).toList();
@@ -111,6 +114,36 @@ public class FollowService {
         Long nextCursor = (following.getContent().isEmpty()) ? null : following.getContent().get(following.getContent().size() - 1).getId();
         Boolean hasNext = (following.getContent().size() == limit) ? true : false;
         return new Cursor<>(follows, nextCursor, hasNext);
+    }
+
+    /**
+     * 팔로우 추천 피드
+     */
+    public Cursor<User> searchFollow(UserEntity user, String searchUser, Long lastFetchedId, Integer limit) {
+
+        // 유저 존재하는지 확인
+        if (!userRepository.existsById(user.getId())) {
+            throw new CoreException(ErrorType.USER_NOT_FOUND);
+        }
+
+        // 팔로우 최신 버전
+        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(searchUser, cursor, pageable);
+
+        // 정보 변환
+        List<User> users = userEntities.getContent().stream()
+                .map(entity -> User.builder()
+                        .id(entity.getId())
+                        .username(entity.getUsername())
+                        .bio(entity.getBio())
+                        .build()
+                )
+                .toList();
+
+        Long nextCursor = (userEntities.getContent().isEmpty()) ? null : userEntities.getContent().get(userEntities.getContent().size() - 1).getId();
+        Boolean hasNext = (userEntities.getContent().size() == limit) ? true : false;
+        return new Cursor<>(users, nextCursor, hasNext);
     }
 
     /**
