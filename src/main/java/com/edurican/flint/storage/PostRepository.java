@@ -17,4 +17,13 @@ public interface PostRepository extends JpaRepository<PostEntity,Long> {
     Slice<PostEntity> findByTopicIdWithCursor(@Param("topicId") Long topicId, @Param("cursor") Long cursor, Integer limit);
 
 
+    // 좋아요 증감
+    @Modifying
+    @Query("UPDATE PostEntity p SET p.likeCount = p.likeCount + 1 WHERE p.id = :postId")
+    int incrementLikeCount(@Param("postId") Long postId);
+
+    @Modifying
+    @Query("UPDATE PostEntity p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount>0")
+    int decrementLikeCount(@Param("postId") Long postId);
+
 }

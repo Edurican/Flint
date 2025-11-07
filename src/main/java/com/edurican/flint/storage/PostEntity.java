@@ -44,6 +44,12 @@ public class PostEntity extends BaseSoftEntity{
         this.content = content;
         this.topicId = topicId;
     }
+    public void increaseViewCont()
+    {
+        this.viewCount = this.viewCount + 1;
+    }
+
+
     @PrePersist
     public void postDefault() {
         if (commentCount == null) commentCount = 0;

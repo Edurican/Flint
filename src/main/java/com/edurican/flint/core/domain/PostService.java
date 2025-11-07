@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -17,12 +20,14 @@ public class PostService {
     private final UserRepository userRepository;
     private final TopicRepository topicRepository;
     private final PostFeed postFeed;
+    private final PostLikeRepository postLikeRepository;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed, PostLikeRepository postLikeRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
         this.postFeed = postFeed;
+        this.postLikeRepository = postLikeRepository;
     }
 
     @Transactional
@@ -71,12 +76,13 @@ public class PostService {
     }
 
 
-
     //전체 게시물
-    @Transactional
+    @Transactional(readOnly = true)
     public Cursor<Post> getAll(Long userId, Long lastFetchedId, Integer limit)
     {
+
         return postFeed.getRecommendFeed(userId, lastFetchedId, limit);
+
     }
 
     //단건 조회
@@ -84,11 +90,21 @@ public class PostService {
     public Post getPostsById(Long postId)
     {
         PostEntity post =  this.postRepository.findById(postId).orElseThrow();
-        return toPost(post);
+
+        post.increaseViewCont();
+        postRepository.save(post);
+
+        UserEntity userE = this.userRepository.findById(post.getUserId()).orElse(null);
+        TopicEntity topicE = this.topicRepository.findById(post.getTopicId()).orElse(null);
+
+        String username = (userE != null) ? userE.getUsername() : "";
+        String topicName = (topicE != null) ? topicE.getTopicName() : "";
+
+        return Post.of(post,username,topicName);
     }
 
     //특정 유저의 게시물
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Post> getPostsByUserId(Long userId)
     {
         if (this.userRepository.findById(userId).isEmpty())
@@ -96,11 +112,32 @@ public class PostService {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
 
+        List<PostEntity> posts = postRepository.findByUserId(userId);
+        if (posts.isEmpty()) return List.of();
 
-        return this.postRepository.findByUserId(userId)
-            .stream()
-            .map(this::toPost)
-            .toList();
+        // 유저 아이디, 토픽 아이디 분리
+        List<Long> userIds = posts.stream().map(PostEntity::getUserId).distinct().toList();
+        List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
+
+        //유저 아이디의 유저 정보 얻기
+        Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+
+        //토픽 아이디의 토픽 정보 얻기
+        Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
+                .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
+
+        // 도메인 변환 (add username/topicName)
+        return posts.stream()
+                .map(postE -> {
+                    UserEntity userE = userMap.get(postE.getUserId());
+                    TopicEntity topicE = topicMap.get(postE.getTopicId());
+                    String username = (userE != null) ? userE.getUsername() : ""; // 실제 게터명에 맞게 수정
+                    String topicName = (topicE != null) ? topicE.getTopicName() : "";     // 실제 게터명에 맞게 수정
+                    return Post.of(postE, username, topicName);
+                })
+                .toList();
+
     }
 
     //특정 토픽의 게시물
@@ -109,23 +146,31 @@ public class PostService {
         return postFeed.getTopicFeed(topicId, lastFetchedId, limit);
     }
 
+    //좋아요
+    @Transactional
+    public void likePost(Long userId, Long postId) {
+        // 댓글 존재 확인
+        PostEntity post = this.postRepository.findById(postId).orElseThrow();
 
+        // 이미 좋아요한 경우 -> 좋아요 취소
+        if (postLikeRepository.existsByUserIdAndPostId(userId, postId)) {
+            int deleteCount = postLikeRepository.deleteByUserIdAndPostId(userId, postId);
+            if (deleteCount <= 0) {
+                throw new CoreException(ErrorType.DEFAULT_ERROR);
+            }
+            PostRepository postRepository = this.postRepository;
+            postRepository.decrementLikeCount(postId);
+            return; // 좋아요 취소 후 종료
+        }
 
-    private Post toPost(PostEntity e)
-    {
-        return new Post(
-                e.getId(),
-                e.getContent(),
-                e.getUserId(),
-                e.getTopicId(),
-                e.getViewCount(),
-                e.getCommentCount(),
-                e.getLikeCount(),
-                e.getResparkCount(),
-                e.getStatus().name(),
-                e.getUpdatedAt(),
-                e.getCreatedAt()
-        );
+        // 좋아요 추가
+        try {
+            postLikeRepository.save(new PostLikeEntity(userId, postId));
+            postRepository.incrementLikeCount(postId);
+
+        } catch (Exception e) {
+            throw new CoreException(ErrorType.DEFAULT_ERROR);
+        }
     }
 
 

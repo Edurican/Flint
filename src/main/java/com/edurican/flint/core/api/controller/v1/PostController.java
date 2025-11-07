@@ -78,7 +78,7 @@ public class PostController
     @Operation(summary = "특정 스파크 조회", description = "특정 스파크(게시물) 조회")
     public ApiResult<PostResponse> getPost(@PathVariable Long postId)
     {
-        Post post = this.postService.getPostsById(postId);
+        Post post = postService.getPostsById(postId);
         return ApiResult.success(PostResponse.from(post));
     }
 
@@ -92,6 +92,7 @@ public class PostController
     )
     {
         Cursor<Post> posts = this.postService.getPostsByTopic(topicId, lastFetchedId, limit);
+
         List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
         return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
@@ -116,6 +117,23 @@ public class PostController
         List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
         return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
+
+    /**
+     * 게시물 좋아요
+     */
+    @PostMapping("/api/v1/post/{postId}/like")
+    @Operation(summary = "스파크(게시물) 좋아요", description = "스파크에 좋아요를 추가합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "좋아요 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class)))
+    })
+    public ApiResult<Boolean> likePost(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long postId) {
+        Long authenticatedUserId = userDetails.getUser().getId();
+        postService.likePost(authenticatedUserId, postId);
+        return ApiResult.success(true);
+    }
+
 
 
 
