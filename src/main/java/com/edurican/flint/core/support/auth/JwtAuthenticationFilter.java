@@ -37,7 +37,7 @@ import java.io.IOException;
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
             String tokenValue = request.getHeader("Authorization");
 
-            // 인증 방식의 종류를 알려주는 'Bearer'를 토큰에 삽입(추출 할 때에는 파싱)
+            // 인증 방식의 종류를 알려주는 'Bearer '를 토큰에 삽입(추출 할 때에는 파싱)
             if (tokenValue != null && tokenValue.startsWith("Bearer ")) {
                 String token = tokenValue.substring(7);
 

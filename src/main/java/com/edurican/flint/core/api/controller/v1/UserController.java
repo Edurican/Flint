@@ -3,6 +3,7 @@ package com.edurican.flint.core.api.controller.v1;
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
 import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
+import com.edurican.flint.core.api.controller.v1.response.UserProfileResponse;
 import com.edurican.flint.core.domain.UserService;
 import com.edurican.flint.core.support.response.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,9 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 //@RequestMapping("/api/v1/auth")
@@ -50,5 +49,13 @@ public class UserController {
         //            String token = userService.login(loginRequestDto);
         //            return ApiResult.success(token);
         }
+
+    @GetMapping("/api/v1/users/{username}")
+    @Operation(summary = "유저 프로필 조회", description = "username으로 유저 프로필 정보 조회")
+    public ApiResult<UserProfileResponse> getUserProfile(@PathVariable String username) {
+        UserProfileResponse userProfile = userService.getUserProfileByUsername(username);
+        return ApiResult.success(userProfile);
     }
+
+}
 
