@@ -38,14 +38,14 @@ public class CommentController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommentResponse.class)))
     })
-    public ApiResult<Boolean> createComment(
+    public ApiResult<CommentResponse> createComment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long postId,
             @RequestBody CreateCommentRequest request) {
         long userId = 1; // 임시 userId
 
-            commentService.createComment(userId, postId, request);
-            return ApiResult.success(true);
+            CommentResponse response = commentService.createComment(userId, postId, request);
+            return ApiResult.success(response);
         }
     /**
      * 댓글 수정
