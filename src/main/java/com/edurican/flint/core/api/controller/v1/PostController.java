@@ -76,8 +76,7 @@ public class PostController
 
     @GetMapping("/api/v1/posts/{postId}")
     @Operation(summary = "특정 스파크 조회", description = "특정 스파크(게시물) 조회")
-    public ApiResult<PostResponse> getPost(@PathVariable Long postId)
-    {
+    public ApiResult<PostResponse> getPost(@PathVariable Long postId) {
         Post post = postService.getPostsById(postId);
         return ApiResult.success(PostResponse.from(post));
     }

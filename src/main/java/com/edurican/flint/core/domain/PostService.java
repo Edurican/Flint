@@ -31,8 +31,7 @@ public class PostService {
     }
 
     @Transactional
-    public boolean create(Long userId, String content, Long topicId)
-    {
+    public boolean create(Long userId, String content, Long topicId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
@@ -44,8 +43,7 @@ public class PostService {
     }
 
     @Transactional
-    public boolean update(Long postId, Long userId, String content, Long topicId)
-    {
+    public boolean update(Long postId, Long userId, String content, Long topicId) {
         PostEntity post = this.postRepository.findById(postId).orElseThrow();
 
         if (!post.getUserId().equals(userId))
@@ -78,8 +76,7 @@ public class PostService {
 
     //전체 게시물
     @Transactional(readOnly = true)
-    public Cursor<Post> getAll(Long userId, Long lastFetchedId, Integer limit)
-    {
+    public Cursor<Post> getAll(Long userId, Long lastFetchedId, Integer limit) {
 
         return postFeed.getRecommendFeed(userId, lastFetchedId, limit);
 
@@ -87,8 +84,7 @@ public class PostService {
 
     //단건 조회
     @Transactional
-    public Post getPostsById(Long postId)
-    {
+    public Post getPostsById(Long postId) {
         PostEntity post =  this.postRepository.findById(postId).orElseThrow();
 
         post.increaseViewCont();
@@ -105,8 +101,7 @@ public class PostService {
 
     //특정 유저의 게시물
     @Transactional(readOnly = true)
-    public List<Post> getPostsByUserId(Long userId)
-    {
+    public List<Post> getPostsByUserId(Long userId) {
         if (this.userRepository.findById(userId).isEmpty())
         {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
