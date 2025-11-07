@@ -26,8 +26,21 @@ public class PostFeed {
 
     public Cursor<Post> getRecommendFeed(Long userId, Long lastFetchedId, Integer limit) {
 
+        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
+
         List<UserTopicEntity> userTopics = userTopicRepository.findByUserIdOrderByScoreDesc(userId);
         double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
+        if(userTopics.isEmpty() || userTopics.size() < 3 || totalScore < 20.0) {    // 임시 (데이터가 쌓이지 않았다면)
+
+            Slice<PostEntity> postEntities = postRepository.findByWithCursor(cursor, limit);
+            List<Post> posts = postEntities.stream()
+                    .map(Post::of)
+                    .toList();
+
+            Long nextCursor = (posts.isEmpty()) ? null : posts.get(posts.size() - 1).getId();
+            Boolean hasNext = (posts.size() == limit) ? true : false;
+            return new Cursor<>(posts, nextCursor, hasNext);
+        }
 
         Map<Long, Integer> topicCounts = new HashMap<>();
         for (int i = 0; i < limit; i++) {
@@ -43,7 +56,6 @@ public class PostFeed {
             }
         }
 
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
         List<Post> posts = topicCounts.entrySet().stream()
                 .flatMap(entry -> getTopicFeed(entry.getKey(), cursor, entry.getValue()).getContents().stream())
                 .sorted(Comparator.comparing(Post::getId).reversed())

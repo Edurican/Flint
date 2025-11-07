@@ -12,11 +12,11 @@ import java.util.List;
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
     FollowEntity findByFollowerIdAndFollowingId(Long followerId, Long followingId);
 
-    @Query("SELECT f FROM FollowEntity f WHERE f.followerId = :followerId AND f.id < :cursor ORDER BY f.id DESC LIMIT :limit")
-    Slice<FollowEntity> findByFollowerIdWithCursor(@Param("followerId") Long followerId, @Param("cursor") Long cursor, @Param("limit") Integer limit);
+    @Query("SELECT f FROM FollowEntity f WHERE f.followerId = :followerId AND f.id < :cursor ORDER BY f.id DESC")
+    Slice<FollowEntity> findByFollowerIdWithCursor(@Param("followerId") Long followerId, @Param("cursor") Long cursor, Pageable pageable);
 
-    @Query("SELECT f FROM FollowEntity f WHERE f.followingId = :followingId AND f.id < :cursor ORDER BY f.id DESC LIMIT :limit")
-    Slice<FollowEntity> findByFollowingIdWithCursor(@Param("followingId") Long followingId, @Param("cursor") Long cursor, @Param("limit") Integer limit);
+    @Query("SELECT f FROM FollowEntity f WHERE f.followingId = :followingId AND f.id < :cursor ORDER BY f.id DESC")
+    Slice<FollowEntity> findByFollowingIdWithCursor(@Param("followingId") Long followingId, @Param("cursor") Long cursor, Pageable pageable);
 
     boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
 

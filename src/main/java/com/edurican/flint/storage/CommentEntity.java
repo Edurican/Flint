@@ -1,7 +1,6 @@
 package com.edurican.flint.storage;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "comments")
+@Table(name = "comments",
+        indexes = {
+                @Index(name = "idx_comments_post", columnList = "postId")
+        })
 public class CommentEntity extends BaseSoftEntity {
 
     @Column(name = "user_id",  nullable = false)
@@ -19,12 +21,36 @@ public class CommentEntity extends BaseSoftEntity {
     @Column(name = "post_id", nullable = false)
     private Long postId;
 
-    @Column(name = "parent_comment_id")
+    @Column(name = "parent_id")
     private Long parentCommentId;
 
     @Column(name = "content", nullable = false, length = 100)
     private String content;
 
     @Column(name = "like_count")
-    private Integer likeCount;
+    private Integer likeCount = 0;
+
+    public CommentEntity(Long userId, Long postId, Long parentCommentId, String content) {
+        this.userId = userId;
+        this.postId = postId;
+        this.parentCommentId = parentCommentId;
+        this.content = content;
+        this.likeCount = 0;
+    }
+
+    public void updateContent(String newContent) {
+        this.content = newContent;
+    }
+
+    public void updateLikeCount(Integer likeCount) {this.likeCount = likeCount;}
+
+    public void increaseLike() {
+        this.likeCount++;
+    }
+
+    public void decreaseLike() {
+        if (this.likeCount > 0) {
+            this.likeCount--;}
+    }
 }
+

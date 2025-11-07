@@ -9,8 +9,10 @@ import lombok.Getter;
 @Getter
 @Table(name = "comment_likes")
 public class CommentLikeEntity extends BaseEntity{
-    @Column(name = "comment_id")
+    @Column(name = "comment_id",  nullable = false )
     private Long commentId;
+
+    @Column(name = "user_id",   nullable = false )
     private Long userId;
 
     public CommentLikeEntity(Long userId, Long commentId) {

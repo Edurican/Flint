@@ -6,7 +6,8 @@ import lombok.Data;
 @Data
 public class UpdateCommentRequest {
 
-    private Long parentCommentId;
+    private Long parentId;
+
     private String content;
 
     @NotBlank(message = "댓글을 작성해주세요.")
