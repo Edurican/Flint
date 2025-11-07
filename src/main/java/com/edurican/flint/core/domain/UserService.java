@@ -4,6 +4,7 @@ package com.edurican.flint.core.domain;
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
 import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
+import com.edurican.flint.core.api.controller.v1.response.UserProfileResponse;
 import com.edurican.flint.core.enums.UserRoleEnum;
 import com.edurican.flint.core.support.auth.JwtUtil;
 import com.edurican.flint.core.support.error.CoreException;
@@ -12,6 +13,7 @@ import com.edurican.flint.storage.UserEntity;
 import com.edurican.flint.storage.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -67,5 +69,13 @@ public class UserService {
 
         return new LoginResponseDto(token, user.getUsername());
 
+    }
+
+    @Transactional(readOnly = true) // [추가] import org.springframework.transaction.annotation.Transactional;
+    public UserProfileResponse getUserProfileByUsername(String username) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+
+        return new UserProfileResponse(user);
     }
 }
