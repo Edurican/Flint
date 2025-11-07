@@ -42,6 +42,8 @@ public class CommentEntity extends BaseSoftEntity {
         this.content = newContent;
     }
 
+    public void updateLikeCount(Integer likeCount) {this.likeCount = likeCount;}
+
     public void increaseLike() {
         this.likeCount++;
     }
