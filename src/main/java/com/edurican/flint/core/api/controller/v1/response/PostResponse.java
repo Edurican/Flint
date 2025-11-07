@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PostResponse {
     private Long id;
+    private Long userId;
     private String content;
     private String username;
     private String topicName;
@@ -21,6 +22,7 @@ public class PostResponse {
     public static PostResponse from(Post post) {
         return PostResponse.builder()
                 .id(post.getId())
+                .userId(post.getUserId())
                 .content(post.getContent())
                 .username(post.getUserName())
                 .topicName(post.getTopicName())
