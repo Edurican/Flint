@@ -16,6 +16,9 @@ import lombok.Setter;
 public class TopicEntity extends BaseEntity {
 
     @Column(name = "topic")
-    private String topic;
+    private String topicName;
 
+    public TopicEntity(String topicName) {
+        this.topicName = topicName;
+    }
 }

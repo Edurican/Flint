@@ -17,7 +17,9 @@ public class Post {
     private Long id;
     private String content;
     private Long userId;
+    private String userName;
     private Long topicId;
+    private String topicName;
     private Integer viewCount;
     private Integer commentCount;
     private Integer likeCount;
@@ -27,19 +29,36 @@ public class Post {
     private LocalDateTime createdAt;
 
     public static Post of(PostEntity postEntity) {
-        Post post = new Post();
-        post.id = postEntity.getId();
-        post.content = postEntity.getContent();
-        post.userId = postEntity.getUserId();
-        post.topicId = postEntity.getTopicId();
-        post.viewCount = postEntity.getViewCount();
-        post.commentCount = postEntity.getCommentCount();
-        post.likeCount = postEntity.getLikeCount();
-        post.resparkCount = postEntity.getResparkCount();
-        post.status = postEntity.getStatus().toString();
-        post.updatedAt = postEntity.getUpdatedAt();
-        post.createdAt = postEntity.getCreatedAt();
-        return post;
+        return Post.builder()
+                .id(postEntity.getId())
+                .content(postEntity.getContent())
+                .userId(postEntity.getUserId())
+                .topicId(postEntity.getTopicId())
+                .viewCount(postEntity.getViewCount())
+                .commentCount(postEntity.getCommentCount())
+                .likeCount(postEntity.getLikeCount())
+                .resparkCount(postEntity.getResparkCount())
+                .status(postEntity.getStatus().name())
+                .updatedAt(postEntity.getUpdatedAt())
+                .createdAt(postEntity.getCreatedAt())
+                .build();
+    }
+    public static Post of(PostEntity postEntity,String userName, String topicName) {
+        return Post.builder()
+                .id(postEntity.getId())
+                .content(postEntity.getContent())
+                .userId(postEntity.getUserId())
+                .userName(userName)
+                .topicId(postEntity.getTopicId())
+                .topicName(topicName)
+                .viewCount(postEntity.getViewCount())
+                .commentCount(postEntity.getCommentCount())
+                .likeCount(postEntity.getLikeCount())
+                .resparkCount(postEntity.getResparkCount())
+                .status(postEntity.getStatus().name())
+                .updatedAt(postEntity.getUpdatedAt())
+                .createdAt(postEntity.getCreatedAt())
+                .build();
     }
 
 }
