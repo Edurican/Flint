@@ -17,6 +17,7 @@ public class CommentSearchResponse {
     private Long userId;
     private Long postId;
     private Long parentCommentId;
+    private Integer depth;
     private String content;
     private Integer likeCount;
     private Long replyCount;

@@ -24,16 +24,20 @@ public class CommentEntity extends BaseSoftEntity {
     @Column(name = "parent_id")
     private Long parentCommentId;
 
+    @Column(name = "depth")
+    private Integer depth;
+
     @Column(name = "content", nullable = false, length = 100)
     private String content;
 
     @Column(name = "like_count")
     private Integer likeCount = 0;
 
-    public CommentEntity(Long userId, Long postId, Long parentCommentId, String content) {
+    public CommentEntity(Long userId, Long postId, Long parentCommentId, Integer depth, String content) {
         this.userId = userId;
         this.postId = postId;
         this.parentCommentId = parentCommentId;
+        this.depth = depth;
         this.content = content;
         this.likeCount = 0;
     }
