@@ -2,6 +2,7 @@ package com.edurican.flint.core.domain;
 
 
 import com.edurican.flint.core.api.controller.v1.request.LoginRequestDto;
+import com.edurican.flint.core.api.controller.v1.request.ProfileUpdateRequestDto;
 import com.edurican.flint.core.api.controller.v1.request.SignupRequestDto;
 import com.edurican.flint.core.api.controller.v1.response.LoginResponseDto;
 import com.edurican.flint.core.api.controller.v1.response.UserProfileResponse;
@@ -9,6 +10,7 @@ import com.edurican.flint.core.enums.UserRoleEnum;
 import com.edurican.flint.core.support.auth.JwtUtil;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
+import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.storage.UserEntity;
 import com.edurican.flint.storage.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,5 +83,30 @@ public class UserService {
         long postCount = postService.getPostCountByUserId(user.getId());
 
         return new UserProfileResponse(user, postCount);
+    }
+
+    /*
+    * 프로필 업데이트 메소드
+    * */
+    @Transactional
+    public void updateProfile(UserDetailsImpl userDetails, ProfileUpdateRequestDto profileUpdateRequestDto) {
+        Long userId = userDetails.getUser().getId();
+        UserEntity user = userRepository.findById(userId).orElseThrow(
+                () -> new CoreException(ErrorType.USER_NOT_FOUND));
+
+        String newUsername = profileUpdateRequestDto.getUsername();
+        String newBio = profileUpdateRequestDto.getBio();
+
+        // username 중복 감지 로직
+        if(newUsername != null && !newUsername.equals(user.getUsername())) {
+            userRepository.findByUsername(newUsername)
+                    .ifPresent(existingUser -> {
+                        throw new CoreException(ErrorType.USER_DUPLICATE_USERNAME);
+                    });
+        } else {
+            newUsername = null;
+        }
+
+        user.updateProfile(newUsername, newBio);
     }
 }

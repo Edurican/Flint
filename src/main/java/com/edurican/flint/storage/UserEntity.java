@@ -45,4 +45,13 @@ public class UserEntity extends BaseSoftEntity {
         this.email = email;
         this.role = role;
     }
+
+    public void updateProfile(String newUsername, String newBio) {
+        if (newUsername != null) {
+            this.username = newUsername;
+        }
+        if (newBio != null) {
+            this.bio = newBio;
+        }
+    }
 }
