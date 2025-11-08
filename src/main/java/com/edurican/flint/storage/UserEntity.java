@@ -14,6 +14,9 @@ import java.util.Date;
 @Table(name = "users")
 public class UserEntity extends BaseSoftEntity {
 
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "username", unique = true)
     private String username;
 
