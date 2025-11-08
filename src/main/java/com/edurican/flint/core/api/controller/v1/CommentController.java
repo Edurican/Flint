@@ -15,11 +15,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 public class CommentController {
 
     private final CommentService commentService;
@@ -42,9 +47,9 @@ public class CommentController {
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long postId,
             @RequestBody CreateCommentRequest request) {
-        long userId = 1; // 임시 userId
 
-            CommentResponse response = commentService.createComment(userId, postId, request);
+            CommentResponse response = commentService.createComment(userDetails.getUser().getId(),  postId, request);
+
             return ApiResult.success(response);
         }
     /**
@@ -58,11 +63,12 @@ public class CommentController {
                             schema = @Schema(implementation = CommentResponse.class)))
     })
     public ApiResult<Boolean> updateComment(
+            @Valid @NotNull
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId,
             @RequestBody UpdateCommentRequest request) {
-        long userId = 1; // 임시 userId
-            commentService.updateComment(userId, commentId, request);
+
+            commentService.updateComment(userDetails.getUser().getId(), commentId, request);
             return ApiResult.success(true);
     }
     /**
@@ -76,10 +82,11 @@ public class CommentController {
                             schema = @Schema(implementation = Boolean.class)))
     })
     public ApiResult<Void> deleteComment(
+            @Valid @NotNull
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId) {
-        long userId = 1; // 임시 userId
-        commentService.deleteComment(userId, commentId);
+
+        commentService.deleteComment(userDetails.getUser().getId(), commentId);
         return ApiResult.success(null);
     }
     /**
@@ -95,8 +102,8 @@ public class CommentController {
     public ApiResult<Integer> likeComment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId) {
-        long userId = 1; // 임시 userId
-        Integer updated = commentService.likeComment(userId, commentId);
+
+        Integer updated = commentService.likeComment(userDetails.getUser().getId(), commentId);
         return ApiResult.success(updated);
     }
     /*
@@ -111,12 +118,13 @@ public class CommentController {
     })
     public ApiResult<CursorResponse<CommentSearchResponse>> getComments(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestParam Long postId,
+            @RequestParam @NotNull Long postId,
+            @RequestParam(required = false) Integer depth,
             @RequestParam(required = false) Long lastFetchedId,
-            @RequestParam(defaultValue = "20") Integer limit
+            @RequestParam(defaultValue = "20") @PositiveOrZero Integer limit
     ) {
         Cursor<CommentSearchResponse> cur =
-                commentService.getCommentsWithCursor(postId, lastFetchedId, limit);
+                commentService.getCommentsWithCursor(postId, depth, lastFetchedId, limit);
 
         CursorResponse<CommentSearchResponse> body = CursorResponse.<CommentSearchResponse>builder()
                 .contents(cur.getContents())
@@ -124,26 +132,6 @@ public class CommentController {
                 .hasNext(cur.getHasNext())
                 .build();
 
-        return ApiResult.success(body);
-    }
-
-    @GetMapping("/api/v1/comments/{parentId}/replies")
-    @Operation(summary = "대댓글 조회", description = "특정 대댓글에 달린 자식 댓글을조회")
-    public ApiResult<CursorResponse<CommentSearchResponse>> getReplies(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long parentId,
-            @RequestParam Long postId,
-            @RequestParam(required = false) Long lastFetchedId,
-            @RequestParam(defaultValue = "20") Integer limit
-    ) {
-        Cursor<CommentSearchResponse> cur =
-                commentService.getRepliesWithCursor(postId, parentId, lastFetchedId, limit);
-
-        CursorResponse<CommentSearchResponse> body = CursorResponse.<CommentSearchResponse>builder()
-                .contents(cur.getContents())
-                .lastFetchedId(cur.getLastFetchedId())
-                .hasNext(cur.getHasNext())
-                .build();
         return ApiResult.success(body);
     }
 

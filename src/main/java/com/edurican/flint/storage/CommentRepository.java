@@ -1,5 +1,6 @@
 package com.edurican.flint.storage;
 
+import com.edurican.flint.core.enums.EntityStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
+
+    Optional<CommentEntity> findByIdAndStatus(Long id, EntityStatus status);
 
     @Query("select c.parentCommentId from CommentEntity c where c.id = :id")
     Long findParentIdById(@Param("id") Long id);
@@ -35,11 +38,13 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
                     "WHERE c.post_id = :postId " +
                     "  AND c.status = 'ACTIVE' " +
                     "  AND (:cursor IS NULL OR c.id < :cursor) " +
+                    "  AND c.depth = :depth " +
                     "ORDER BY c.id DESC " +
                     "LIMIT :limit",
             nativeQuery = true)
     List<CommentEntity> findByPostWithCursorNative(
             @Param("postId") Long postId,
+            @Param("depth")  Integer depth,
             @Param("cursor") Long cursor,
             @Param("limit") int limit
     );
