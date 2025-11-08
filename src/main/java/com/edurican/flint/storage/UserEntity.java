@@ -36,6 +36,9 @@ public class UserEntity extends BaseSoftEntity {
     @Enumerated(value = EnumType.STRING)
     private UserRoleEnum role;
 
+    @Column(name = "postcount")
+    private Long postCount = 0L;
+
     public UserEntity(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;

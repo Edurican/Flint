@@ -52,6 +52,9 @@ public class UserController {
 
     @GetMapping("/api/v1/users/{username}")
     @Operation(summary = "유저 프로필 조회", description = "username으로 유저 프로필 정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
+    })
     public ApiResult<UserProfileResponse> getUserProfile(@PathVariable String username) {
         UserProfileResponse userProfile = userService.getUserProfileByUsername(username);
         return ApiResult.success(userProfile);

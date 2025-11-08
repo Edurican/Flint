@@ -97,12 +97,12 @@ public class PostController
     }
 
 
-    @GetMapping("/api/v1/users/{userId}/posts")
-    @Operation(summary = "특정 유저 스파크 조회", description = "특정 유저별 스파크(게시물) 목록 조회")
-    public ApiResult<List<PostResponse>> getPostsByUserId(@PathVariable Long userId){
-        List<Post> posts = this.postService.getPostsByUserId(userId);
-        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
-    }
+//    @GetMapping("/api/v1/users/{userId}/posts")
+//    @Operation(summary = "특정 유저 스파크 조회", description = "특정 유저별 스파크(게시물) 목록 조회")
+//    public ApiResult<List<PostResponse>> getPostsByUserId(@PathVariable Long userId){
+//        List<Post> posts = this.postService.getPostsByUserId(userId);
+//        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
+//    }
 
     @GetMapping("/api/v1/posts")
     @Operation(summary = "전체 스파크 조회", description = "전체 스파크(게시물) 목록 조회")
@@ -133,7 +133,18 @@ public class PostController
         return ApiResult.success(true);
     }
 
+    @GetMapping("/api/v1/users/{username}/posts")
+    @Operation(summary = "특정 유저 스파크 조회", description = "특정 유저별 스파크 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class)))
+    })
+    public ApiResult<List<PostResponse>> getPostsByUsername(@PathVariable String username) {
 
+        // 게시글 작성자 전달(카운트 기능)
+        List<Post> posts = this.postService.getPostsByUsername(username);
+        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
 
-
+    }
 }

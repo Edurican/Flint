@@ -20,11 +20,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PostService postService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PostService postService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.postService = postService;
     }
 
     /* 회원가입 서비스 */
@@ -71,11 +73,13 @@ public class UserService {
 
     }
 
-    @Transactional(readOnly = true) // [추가] import org.springframework.transaction.annotation.Transactional;
+    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfileByUsername(String username) {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        return new UserProfileResponse(user);
+        long postCount = postService.getPostCountByUserId(user.getId());
+
+        return new UserProfileResponse(user, postCount);
     }
 }

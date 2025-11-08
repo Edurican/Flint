@@ -1,5 +1,6 @@
 package com.edurican.flint.core.domain;
 
+import com.edurican.flint.core.enums.EntityStatus;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
@@ -107,7 +108,7 @@ public class PostService {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
 
-        List<PostEntity> posts = postRepository.findByUserId(userId);
+        List<PostEntity> posts = postRepository.findByUserIdOrderByIdDesc(userId);
         if (posts.isEmpty()) return List.of();
 
         // 유저 아이디, 토픽 아이디 분리
@@ -168,5 +169,17 @@ public class PostService {
         }
     }
 
+    // 게시물 중 username을 가져와 그 사용자의 Id를 전달
+    public List<Post> getPostsByUsername(String username) {
+        UserEntity user = userRepository.findByUsername(username).
+                orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        return getPostsByUserId(user.getId());
+    }
+
+    // 게시물 개수 카운팅
+    @Transactional(readOnly = true)
+    public long getPostCountByUserId(Long userId) {
+        return postRepository.countByUserIdAndStatus(userId, EntityStatus.ACTIVE);
+    }
 }
