@@ -13,10 +13,14 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByEmail(String email);
 
     @Query("SELECT u FROM UserEntity u " +
+            "LEFT JOIN FollowEntity f ON f.followerId = :userId AND f.followingId = u.id " +
             "WHERE (:target IS NULL OR u.username LIKE CONCAT('%', :target, '%')) " +
-            "AND u.id < :cursor " +
+            "  AND f.id IS NULL " +
+            "  AND u.id <> :userId " +
+            "  AND u.id < :cursor " +
             "ORDER BY u.id DESC")
     Slice<UserEntity> searchByUsernameWithCursor(
+            @Param("userId") Long userId,
             @Param("target") String target,
             @Param("cursor") Long cursor,
             Pageable pageable);

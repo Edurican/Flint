@@ -129,7 +129,7 @@ public class FollowService {
         // 팔로우 최신 버전
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
         Pageable pageable = PageRequest.of(0, limit);
-        Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(searchUser, cursor, pageable);
+        Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(user.getId(), searchUser, cursor, pageable);
 
         // 정보 변환
         List<User> users = userEntities.getContent().stream()

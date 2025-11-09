@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.aspectj.apache.bcel.classfile.Module;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -77,7 +76,7 @@ public class FollowController {
     ) {
         Cursor<User> users = followService.searchFollow(userDetails.getUser(), username, lastFetchedId, limit);
         List<UserResponse> userResponses = users.getContents().stream().map(UserResponse::of).toList();
-        return ApiResult.success(new CursorResponse(userResponses, users.getLastFetchedId(), users.getHasNext()));
+        return ApiResult.success(new CursorResponse<>(userResponses, users.getLastFetchedId(), users.getHasNext()));
     }
 
     @PostMapping("/api/v1/{followId}/follow")
@@ -120,7 +119,7 @@ public class FollowController {
     ) {
         Cursor<Follow> follows = followService.getFollowersByUsername(username, lastFetchedId, limit);
         List<FollowResponse> followers = follows.getContents().stream().map(FollowResponse::of).toList();
-        return ApiResult.success(new CursorResponse(followers, follows.getLastFetchedId(), follows.getHasNext()));
+        return ApiResult.success(new CursorResponse<>(followers, follows.getLastFetchedId(), follows.getHasNext()));
     }
 
     /* 특정 유저의 팔로잉 목록 조회 */
@@ -137,7 +136,7 @@ public class FollowController {
     ) {
         Cursor<Follow> follows = followService.getFollowingByUsername(username, lastFetchedId, limit);
         List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
-        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
+        return ApiResult.success(new CursorResponse<>(following, follows.getLastFetchedId(), follows.getHasNext()));
 
     }
 }
