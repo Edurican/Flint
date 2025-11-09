@@ -57,4 +57,37 @@ public class UserEntity extends BaseSoftEntity {
             this.bio = newBio;
         }
     }
+
+    /*
+    * 엔티티 계층에서 팔로우, 팔로잉 카운트 증감
+    * */
+    public void incrementFollowersCount() {
+        if(this.followersCount == null) {
+            this.followersCount = 0;
+        }
+        this.followersCount++;
+    }
+
+    public void decrementFollowersCount() {
+        if (this.followersCount == null || this.followersCount <= 0) {
+            this.followersCount = 0;
+        } else {
+            this.followersCount--;
+        }
+    }
+
+    public void incrementFollowingCount() {
+        if (this.followingCount == null) {
+            this.followingCount = 0;
+        }
+        this.followingCount++;
+    }
+
+    public void decrementFollowingCount() {
+        if (this.followingCount == null || this.followingCount <= 0) {
+            this.followingCount = 0;
+        } else {
+            this.followingCount--;
+        }
+    }
 }

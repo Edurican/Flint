@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.aspectj.apache.bcel.classfile.Module;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -31,37 +32,37 @@ public class FollowController {
         this.followService = followService;
     }
 
-    @GetMapping("/api/v1/{userId}/followers")
-    @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
-    })
-    public ApiResult<CursorResponse<FollowResponse>> getFollowers(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long userId,
-            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
-            @RequestParam(name = "limit", defaultValue = "20") Integer limit
-    ) {
-        Cursor<Follow> follows = followService.getFollowers(userId, lastFetchedId, limit);
-        List<FollowResponse> followers = follows.getContents().stream().map(FollowResponse::of).toList();
-        return ApiResult.success(new CursorResponse(followers, follows.getLastFetchedId(), follows.getHasNext()));
-    }
+//    @GetMapping("/api/v1/{userId}/followers")
+//    @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
+//    })
+//    public ApiResult<CursorResponse<FollowResponse>> getFollowers(
+//            @AuthenticationPrincipal UserDetailsImpl userDetails,
+//            @PathVariable Long userId,
+//            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+//            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+//    ) {
+//        Cursor<Follow> follows = followService.getFollowers(userId, lastFetchedId, limit);
+//        List<FollowResponse> followers = follows.getContents().stream().map(FollowResponse::of).toList();
+//        return ApiResult.success(new CursorResponse(followers, follows.getLastFetchedId(), follows.getHasNext()));
+//    }
 
-    @GetMapping("/api/v1/{userId}/following")
-    @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
-    })
-    public ApiResult<CursorResponse<FollowResponse>> getFollowing(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long userId,
-            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
-            @RequestParam(name = "limit", defaultValue = "20") Integer limit
-    ) {
-        Cursor<Follow> follows = followService.getFollowing(userId, lastFetchedId, limit);
-        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
-        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
-    }
+//    @GetMapping("/api/v1/{userId}/following")
+//    @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FollowResponse.class)))})
+//    })
+//    public ApiResult<CursorResponse<FollowResponse>> getFollowing(
+//            @AuthenticationPrincipal UserDetailsImpl userDetails,
+//            @PathVariable Long userId,
+//            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+//            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+//    ) {
+//        Cursor<Follow> follows = followService.getFollowing(userId, lastFetchedId, limit);
+//        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
+//        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
+//    }
 
     @GetMapping("/api/v1/search")
     @Operation(summary = "팔로우 검색", description = "팔로우 검색 피드")
@@ -103,5 +104,40 @@ public class FollowController {
     ) {
         followService.unfollow(userDetails.getUser().getId(), unfollowId);
         return ApiResult.success(true);
+    }
+
+    /* 특정 유저의 팔로워 목록 조회 */
+    @GetMapping("/api/v1/{username}/followers")
+    @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))})
+    })
+    public ApiResult<CursorResponse<FollowResponse>> getFollowers(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable String username,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    ) {
+        Cursor<Follow> follows = followService.getFollowersByUsername(username, lastFetchedId, limit);
+        List<FollowResponse> followers = follows.getContents().stream().map(FollowResponse::of).toList();
+        return ApiResult.success(new CursorResponse(followers, follows.getLastFetchedId(), follows.getHasNext()));
+    }
+
+    /* 특정 유저의 팔로잉 목록 조회 */
+    @GetMapping("api/v1/{username}/following")
+    @Operation(summary = "팔로잉 불러오기", description = "특정 유저 팔로잉 불러오기")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))})
+    })
+    public ApiResult<CursorResponse<FollowResponse>> getFollowing(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable String username,
+            @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
+            @RequestParam(name = "limit", defaultValue = "20") Integer limit
+    ) {
+        Cursor<Follow> follows = followService.getFollowingByUsername(username, lastFetchedId, limit);
+        List<FollowResponse> following = follows.getContents().stream().map(FollowResponse::of).toList();
+        return ApiResult.success(new CursorResponse(following, follows.getLastFetchedId(), follows.getHasNext()));
+
     }
 }

@@ -89,13 +89,14 @@ public class UserService {
     * 프로필 업데이트 메소드
     * */
     @Transactional
-    public void updateProfile(UserDetailsImpl userDetails, ProfileUpdateRequestDto profileUpdateRequestDto) {
+    public String updateProfile(UserDetailsImpl userDetails, ProfileUpdateRequestDto profileUpdateRequestDto) {
         Long userId = userDetails.getUser().getId();
         UserEntity user = userRepository.findById(userId).orElseThrow(
                 () -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         String newUsername = profileUpdateRequestDto.getUsername();
         String newBio = profileUpdateRequestDto.getBio();
+        String newToken = null;
 
         // username 중복 감지 로직
         if(newUsername != null && !newUsername.equals(user.getUsername())) {
@@ -103,10 +104,14 @@ public class UserService {
                     .ifPresent(existingUser -> {
                         throw new CoreException(ErrorType.USER_DUPLICATE_USERNAME);
                     });
+            user.updateProfile(newUsername, newBio);
+            newToken = jwtUtil.createJwtToken(newUsername);
+
         } else {
-            newUsername = null;
+            user.updateProfile(null, newBio);
         }
 
-        user.updateProfile(newUsername, newBio);
+//        user.updateProfile(newUsername, newBio);
+        return newToken;
     }
 }

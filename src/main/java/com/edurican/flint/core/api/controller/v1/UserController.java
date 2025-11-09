@@ -71,8 +71,11 @@ public class UserController {
     public ApiResult<String> updateMyProfile(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid ProfileUpdateRequestDto profileUpdateRequestDto)  {
-        userService.updateProfile(userDetails, profileUpdateRequestDto);
-        return ApiResult.success("프로필이 성공적으로 수정되었습니다.");
+//        userService.updateProfile(userDetails, profileUpdateRequestDto);
+//        return ApiResult.success("프로필이 성공적으로 수정되었습니다.");
+
+        String newToken = userService.updateProfile(userDetails, profileUpdateRequestDto);
+        return ApiResult.success(newToken);
     }
 }
 
