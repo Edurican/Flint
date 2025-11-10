@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,13 +24,15 @@ public class PostService {
     private final TopicRepository topicRepository;
     private final PostFeed postFeed;
     private final PostLikeRepository postLikeRepository;
+    private final HotPostRepository hotPostRepository;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed, PostLikeRepository postLikeRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed, PostLikeRepository postLikeRepository, HotPostRepository hotPostRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
         this.postFeed = postFeed;
         this.postLikeRepository = postLikeRepository;
+        this.hotPostRepository = hotPostRepository;
     }
 
     @Transactional
@@ -94,8 +98,8 @@ public class PostService {
         UserEntity userE = this.userRepository.findById(post.getUserId()).orElse(null);
         TopicEntity topicE = this.topicRepository.findById(post.getTopicId()).orElse(null);
 
-        String username = (userE != null) ? userE.getUsername() : "";
-        String topicName = (topicE != null) ? topicE.getTopicName() : "";
+        String username = userE.getUsername();
+        String topicName = topicE.getTopicName();
 
         return Post.of(post,username,topicName);
     }
@@ -128,8 +132,8 @@ public class PostService {
                 .map(postE -> {
                     UserEntity userE = userMap.get(postE.getUserId());
                     TopicEntity topicE = topicMap.get(postE.getTopicId());
-                    String username = (userE != null) ? userE.getUsername() : ""; // 실제 게터명에 맞게 수정
-                    String topicName = (topicE != null) ? topicE.getTopicName() : "";     // 실제 게터명에 맞게 수정
+                    String username = (userE != null) ? userE.getUsername() : "";
+                    String topicName = (topicE != null) ? topicE.getTopicName() : "";
                     return Post.of(postE, username, topicName);
                 })
                 .toList();
@@ -182,4 +186,40 @@ public class PostService {
     public long getPostCountByUserId(Long userId) {
         return postRepository.countByUserIdAndStatus(userId, EntityStatus.ACTIVE);
     }
+
+    //핫 게시물
+    @Transactional(readOnly = true)
+    public List<Post> getHotPosts() {
+        List<Long> hotId = hotPostRepository.findHotPosts();
+        if (hotId.isEmpty()) return List.of();
+
+        List<PostEntity> posts = postRepository.findAllById(hotId);
+        if (posts.isEmpty()) return List.of();
+
+        Map<Long, PostEntity> postMap = posts.stream()
+                .collect(Collectors.toMap(PostEntity::getId, Function.identity()));
+
+        List<Long> userIds  = posts.stream().map(PostEntity::getUserId).distinct().toList();
+        List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
+
+        Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+
+        Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
+                .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
+
+        return hotId.stream()
+                .map(postMap::get)
+                .filter(Objects::nonNull)
+                .map(postE -> {
+                    String username  = Optional.ofNullable(userMap.get(postE.getUserId()))
+                            .map(UserEntity::getUsername).orElse("");
+                    String topicName = Optional.ofNullable(topicMap.get(postE.getTopicId()))
+                            .map(TopicEntity::getTopicName).orElse("");
+                    return Post.of(postE, username, topicName);
+                })
+                .toList();
+
+    }
+
 }

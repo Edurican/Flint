@@ -147,4 +147,12 @@ public class PostController
         return ApiResult.success(posts.stream().map(PostResponse::from).toList());
 
     }
+
+    @GetMapping("/api/v1/posts/trending")
+    @Operation(summary = "핫 게시물", description = "7일 이내, 3시간 마다 핫게시물 갱신")
+    public ApiResult<List<PostResponse>> hotPosts() {
+        List<Post> posts = postService.getHotPosts();
+        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
+    }
+
 }
