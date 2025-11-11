@@ -46,12 +46,23 @@ public class CommentController {
     public ApiResult<CommentResponse> createComment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long postId,
-            @RequestBody CreateCommentRequest request) {
+            @RequestBody @Valid CreateCommentRequest request) {
 
-            CommentResponse response = commentService.createComment(userDetails.getUser().getId(),  postId, request);
+        Long userId;
+        String username;
 
-            return ApiResult.success(response);
-        }
+       if (userDetails == null) {
+           userId = 1L;
+           username = "test-user";
+       } else {
+            userId = userDetails.getUser().getId();
+            username = userDetails.getUser().getUsername();
+       }
+
+       CommentResponse response = commentService.createComment(userId, postId, username, request);
+
+       return ApiResult.success(response);
+    }
     /**
      * 댓글 수정
      */
@@ -62,14 +73,14 @@ public class CommentController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommentResponse.class)))
     })
-    public ApiResult<Boolean> updateComment(
+    public ApiResult<CommentResponse> updateComment(
             @Valid @NotNull
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId,
             @RequestBody UpdateCommentRequest request) {
 
-            commentService.updateComment(userDetails.getUser().getId(), commentId, request);
-            return ApiResult.success(true);
+        CommentResponse updateResponse = commentService.updateComment(userDetails.getUser().getId(), commentId, request);
+            return ApiResult.success(updateResponse);
     }
     /**
      * 댓글 삭제
@@ -95,16 +106,17 @@ public class CommentController {
     @PostMapping("/api/v1/comment/{commentId}/like")
     @Operation(summary = "댓글 좋아요", description = "다시 누르면 취소 됩니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "좋아요 성공",
+            @ApiResponse(responseCode = "200", description = "좋아요 토글 성공",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Boolean.class)))
     })
-    public ApiResult<Integer> likeComment(
+    public ApiResult<Boolean> likeComment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId) {
 
-        Integer updated = commentService.likeComment(userDetails.getUser().getId(), commentId);
-        return ApiResult.success(updated);
+        Long authenticatedUserId = userDetails.getUser().getId();
+        boolean liked = commentService.likeComment(authenticatedUserId, commentId);
+        return ApiResult.success(liked);
     }
     /*
     * 댓글 조회
@@ -117,14 +129,13 @@ public class CommentController {
                             schema = @Schema(implementation = CursorResponse.class)))
     })
     public ApiResult<CursorResponse<CommentSearchResponse>> getComments(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam @NotNull Long postId,
-            @RequestParam(required = false) Integer depth,
+            @RequestParam(required = false) Long commentId,
             @RequestParam(required = false) Long lastFetchedId,
             @RequestParam(defaultValue = "20") @PositiveOrZero Integer limit
     ) {
         Cursor<CommentSearchResponse> cur =
-                commentService.getCommentsWithCursor(postId, depth, lastFetchedId, limit);
+                commentService.getComment(postId, commentId, lastFetchedId, limit);
 
         CursorResponse<CommentSearchResponse> body = CursorResponse.<CommentSearchResponse>builder()
                 .contents(cur.getContents())
@@ -143,7 +154,6 @@ public class CommentController {
                             schema = @Schema(implementation = Long.class)))
     })
     public ApiResult<Long> getCommentTotalCount(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam Long postId) {
         long total = commentService.countCommentsByPost(postId);
         return ApiResult.success(total);

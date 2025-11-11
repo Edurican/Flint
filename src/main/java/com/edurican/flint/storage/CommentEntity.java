@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
         indexes = {
                 @Index(name = "idx_comments_post", columnList = "postId")
         })
+
 public class CommentEntity extends BaseSoftEntity {
 
     @Column(name = "user_id",  nullable = false)
@@ -24,8 +25,11 @@ public class CommentEntity extends BaseSoftEntity {
     @Column(name = "parent_id")
     private Long parentCommentId;
 
-    @Column(name = "depth")
-    private Integer depth;
+    @Column(name = "username", nullable = false)
+    private String username;
+
+    @Column(name = "depth", nullable = false)
+    private Integer depth = 0;
 
     @Column(name = "content", nullable = false, length = 100)
     private String content;
@@ -33,10 +37,11 @@ public class CommentEntity extends BaseSoftEntity {
     @Column(name = "like_count")
     private Integer likeCount = 0;
 
-    public CommentEntity(Long userId, Long postId, Long parentCommentId, Integer depth, String content) {
+    public CommentEntity(Long userId, Long postId, Long parentCommentId, String username, Integer depth, String content) {
         this.userId = userId;
         this.postId = postId;
         this.parentCommentId = parentCommentId;
+        this.username = username;
         this.depth = depth;
         this.content = content;
         this.likeCount = 0;
@@ -44,17 +49,6 @@ public class CommentEntity extends BaseSoftEntity {
 
     public void updateContent(String newContent) {
         this.content = newContent;
-    }
-
-    public void updateLikeCount(Integer likeCount) {this.likeCount = likeCount;}
-
-    public void increaseLike() {
-        this.likeCount++;
-    }
-
-    public void decreaseLike() {
-        if (this.likeCount > 0) {
-            this.likeCount--;}
     }
 }
 
