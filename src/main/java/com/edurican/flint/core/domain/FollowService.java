@@ -6,6 +6,7 @@ import com.edurican.flint.core.support.OffsetLimit;
 import com.edurican.flint.core.support.Page;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
+import com.edurican.flint.core.support.utils.CursorUtil;
 import com.edurican.flint.storage.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -38,20 +39,19 @@ public class FollowService {
      * 유저의 follower 얻기
      */
     @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowers(Long userId, Long lastFetchedId, Integer limit) {
-
-        // 현재 쿼리 3번이 지나치게 발생중 JOIN해야하지 않을까 싶음
-
-        // 유저 존재하는지 확인
-        // 유저 id가 없을 수 있는지 물어보기
-        if (!userRepository.existsById(userId)) {
-            throw new CoreException(ErrorType.USER_NOT_FOUND);
-        }
+    public Cursor<Follow> getFollowers(String username, Long lastFetchedId, Integer limit) {
+        
+        // 유저 조회
+        UserEntity user = userRepository.findByUsername(username).orElseThrow(
+                () -> new CoreException(ErrorType.USER_NOT_FOUND)
+        );
 
         // 팔로워 조회
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Pageable pageable = PageRequest.of(0, limit);
-        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(userId, cursor, pageable);
+        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(
+                user.getId(),
+                CursorUtil.getCursor(lastFetchedId),
+                PageRequest.of(0, limit)
+        );
 
         // 유저 정보를 얻기 위한 Id 분리
         List<Long> followerIds = followers.getContent().stream()
@@ -67,53 +67,62 @@ public class FollowService {
                 .map(follow -> Follow.builder()
                         .id(follow.getId())
                         .followId(follow.getFollowerId())
-                        .username(users.get(follow.getFollowerId()) == null ? "" : users.get(follow.getFollowerId()).getUsername())
+                        .username(users.get(follow.getFollowerId()).getUsername())
                         .followedAt(follow.getCreatedAt())
                         .build()
                 )
                 .toList();
 
-        Long nextCursor = (followers.getContent().isEmpty()) ? null : followers.getContent().get(followers.getContent().size() - 1).getId();
-        Boolean hasNext = (followers.getContent().size() == limit) ? true : false;
-        return new Cursor<>(follows, nextCursor, hasNext);
+        return new Cursor<>(
+                follows,
+                CursorUtil.nextCursor(followers.getContent()).getId(),
+                CursorUtil.hasNextCursor(followers.getContent(), limit)
+        );
     }
 
     /**
      * 유저의 following 얻기
      */
     @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowing(Long userId, Long lastFetchedId, Integer limit) {
+    public Cursor<Follow> getFollowing(String username, Long lastFetchedId, Integer limit) {
 
         // 유저 존재하는지 확인
-        if (!userRepository.existsById(userId)) {
-            throw new CoreException(ErrorType.USER_NOT_FOUND);
-        }
+        UserEntity user = userRepository.findByUsername(username).orElseThrow(
+                () -> new CoreException(ErrorType.USER_NOT_FOUND)
+        );
 
         // 팔로잉 조회
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Pageable pageable = PageRequest.of(0, limit);
-        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(userId, cursor, pageable);
+        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(
+                user.getId(),
+                CursorUtil.getCursor(lastFetchedId),
+                PageRequest.of(0, limit)
+        );
 
         // 유저 정보를 얻기 위한 Id 분리
-        List<Long> followerIds = following.getContent().stream().map(FollowEntity::getFollowingId).toList();
+        List<Long> followerIds = following.getContent().stream()
+                .map(FollowEntity::getFollowingId)
+                .toList();
 
         // 유저 정보 얻기
-        Map<Long, UserEntity> users = userRepository.findAllById(followerIds).stream().collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+        Map<Long, UserEntity> users = userRepository.findAllById(followerIds).stream()
+                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
 
         // 정보 변환
         List<Follow> follows = following.getContent().stream()
                 .map(follow -> Follow.builder()
                         .id(follow.getId())
                         .followId(follow.getFollowingId())
-                        .username(users.get(follow.getFollowingId()) == null ? "" : users.get(follow.getFollowingId()).getUsername())
+                        .username(users.get(follow.getFollowingId()).getUsername())
                         .followedAt(follow.getCreatedAt())
                         .build()
                 )
                 .toList();
 
-        Long nextCursor = (following.getContent().isEmpty()) ? null : following.getContent().get(following.getContent().size() - 1).getId();
-        Boolean hasNext = (following.getContent().size() == limit) ? true : false;
-        return new Cursor<>(follows, nextCursor, hasNext);
+        return new Cursor<>(
+                follows,
+                CursorUtil.nextCursor(following.getContent()).getId(),
+                CursorUtil.hasNextCursor(following.getContent(), limit)
+        );
     }
 
     /**
@@ -200,25 +209,5 @@ public class FollowService {
 
         // 언팔로우 대상은 팔로워 -1
         following.decrementFollowersCount();
-    }
-
-    /* username으로 id를 추출하고 그 id의 팔로워를 추출 */
-    @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowersByUsername(String username, Long lastFetchedId, Integer limit) {
-        UserEntity user = userRepository.findByUsername(username).orElseThrow(
-                () -> new CoreException(ErrorType.USER_NOT_FOUND)
-        );
-
-        return getFollowers(user.getId(), lastFetchedId, limit);
-    }
-
-    /* username으로 id를 추출하고 그 id의 팔로잉을 추출 */
-    @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowingByUsername(String username, Long lastFetchedId, Integer limit) {
-        UserEntity user = userRepository.findByUsername(username).orElseThrow(
-                ()  -> new CoreException(ErrorType.USER_NOT_FOUND)
-        );
-
-        return getFollowing(user.getId(), lastFetchedId, limit);
     }
 }
