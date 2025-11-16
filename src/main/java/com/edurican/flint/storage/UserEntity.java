@@ -14,6 +14,9 @@ import java.util.Date;
 @Table(name = "users")
 public class UserEntity extends BaseSoftEntity {
 
+    @Version
+    private Long version;
+
     @Column(name = "name")
     private String name;
 

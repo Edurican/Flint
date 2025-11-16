@@ -13,4 +13,5 @@ public class Cursor<T> {
     private List<T> contents;
     private Long lastFetchedId;
     private Boolean hasNext;
+    private String nextType;
 }

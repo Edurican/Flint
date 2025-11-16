@@ -6,6 +6,7 @@ import com.edurican.flint.core.support.response.ApiResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,6 +23,12 @@ public class ExceptionController {
             default -> log.info("CoreException : {}", e.getMessage(), e);
         }
         return new ResponseEntity<>(ApiResult.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResult<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        log.error("MethodArgumentNotValidException : {}", e.getMessage(), e);
+        return new ResponseEntity<>(ApiResult.error(ErrorType.DEFAULT_ARGUMENT_NOT_VALID), ErrorType.DEFAULT_ARGUMENT_NOT_VALID.getStatus());
     }
 
     @ExceptionHandler(Exception.class)
