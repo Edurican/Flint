@@ -1,12 +1,3 @@
----
-name: issue template
-about: create defualt issue
-title: ''
-labels: ''
-assignees: ''
-
----
-
 name: '이슈 생성'
 description: 'Repo에 이슈를 생성하며, 생성된 이슈는 Jira와 연동됩니다.'
 labels: [feat]
