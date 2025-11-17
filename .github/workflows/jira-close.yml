@@ -15,7 +15,6 @@ jobs:
         id: extract
         run: |
           TITLE="${{ github.event.issue.title }}"
-          # [FLINT-XX] 형식에서 Jira 키 추출
           JIRA_KEY=$(echo "$TITLE" | grep -oP '\[(\w+-\d+)\]' | tr -d '[]')
           
           if [ -z "$JIRA_KEY" ]; then
@@ -40,7 +39,7 @@ jobs:
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ steps.extract.outputs.issue_key }}
-          transition: "Done"  # ← Jira 프로젝트의 상태 이름으로 변경
+          transition: "완료"  # ← Done에서 완료로 변경!
           
       - name: Add comment to GitHub issue
         if: steps.extract.outputs.found == 'true'
@@ -49,4 +48,4 @@ jobs:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.issue.number }}
-          body: '✅ Jira Issue [${{ steps.extract.outputs.issue_key }}](${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.extract.outputs.issue_key }}) has been closed.'
+          body: '✅ Jira Issue [${{ steps.extract.outputs.issue_key }}](${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.extract.outputs.issue_key }})가 완료되었습니다.'
