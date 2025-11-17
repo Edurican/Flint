@@ -2,6 +2,11 @@ name: Jira Integration
 on:
   issues:
     types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
@@ -49,7 +54,7 @@ jobs:
         uses: atlassian/gajira-create@v3
         with:
           project: FLINT
-          issuetype: Task
+          issuetype: Story  # ← Epic의 자식이라면 Story 사용
           summary: '${{ github.event.issue.title }}'
           description: '${{ steps.md2jira.outputs.output-text }}'
           fields: |
@@ -62,10 +67,16 @@ jobs:
       - name: Log created issue
         run: echo "Jira Issue ${{ steps.issue-parser.outputs.issueparser_parentKey }}/${{ steps.create.outputs.issue }} was created"
         
-      - name: Checkout dev branch  # ← 브랜치 생성용 checkout
+      - name: Checkout dev branch
         uses: actions/checkout@v4
         with:
           ref: dev
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           
       - name: Create branch with Ticket number
         run: |
