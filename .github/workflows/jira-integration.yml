@@ -40,6 +40,13 @@ jobs:
             - ${{ github.event.issue.html_url }}
             ${{ github.event.issue.body }}
           mode: md2jira
+
+      - name: Parse Issue Body
+        id: parse
+        run: |
+          BODY="${{ github.event.issue.body }}"
+          PARENT_KEY=$(echo "$BODY" | grep -A1 "🎟️ 상위 작업" | tail -n1 | xargs)
+          echo "parentKey=$PARENT_KEY" >> $GITHUB_OUTPUT
           
       - name: Create Issue
         id: create
