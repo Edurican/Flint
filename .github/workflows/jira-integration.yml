@@ -8,6 +8,18 @@ jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
     steps:
+      - name: Check Secrets
+          run: |
+            echo "Checking JIRA_BASE_URL format..."
+            if [[ "$JIRA_BASE_URL" =~ $'\n' ]]; then
+              echo "ERROR: URL contains newline!"
+            else
+              echo "OK: No newline detected"
+            fi
+            echo "URL starts with: ${JIRA_BASE_URL:0:8}"
+          env:
+            JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          
       - name: Login
         uses: atlassian/gajira-login@v3
         env:
