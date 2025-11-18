@@ -98,6 +98,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/api-docs/json/**").permitAll()
+                .requestMatchers("/api/v1/images/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated() // auth 제외하고 모든 요청을 인증 받아야 함. (개발 단계이므로 일단 모두 허용)
         );
