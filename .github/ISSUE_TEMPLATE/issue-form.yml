@@ -3,11 +3,23 @@ description: 'Repo에 이슈를 생성하며, 생성된 이슈는 Jira와 연동
 labels: [feat]
 title: '이슈 이름을 작성해주세요'
 body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: '이슈 타입'
+      description: '이슈의 타입을 설정'
+      options:
+        - epic
+        - story
+        - task
+        - sub-task
+      validations:
+      required: true
   - type: input
     id: parentKey
     attributes:
-      label: '🎟️ 상위 작업 (Ticket Number)'
-      description: '상위 작업의 Ticket Number를 기입해주세요'
+      label: 'Ticket Number'
+      description: '상위 작업의 Ticket Number 기입'
       placeholder: 'FLINT-00'
     validations:
       required: true
