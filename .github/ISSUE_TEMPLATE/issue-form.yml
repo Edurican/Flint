@@ -8,7 +8,6 @@ body:
     attributes:
       label: '이슈 타입'
       description: '이슈의 타입을 설정'
-      placeholder: 'epic'
       options:
         - epic
         - story
