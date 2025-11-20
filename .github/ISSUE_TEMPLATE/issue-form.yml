@@ -49,6 +49,7 @@ body:
       options:
         - highest
         - high
+        - medium
         - low
         - lowest
     validations:
