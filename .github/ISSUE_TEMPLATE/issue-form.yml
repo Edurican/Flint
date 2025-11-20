@@ -41,6 +41,14 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: period
+    attributes:
+      label: 'Period'
+      description: '작업 기간'
+    validations:
+      required: true
+
   - type: textarea
     id: tasks
     attributes:
