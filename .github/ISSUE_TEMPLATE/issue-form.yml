@@ -13,7 +13,7 @@ body:
         - story
         - task
         - sub-task
-      validations:
+    validations:
       required: true
   - type: input
     id: parentKey
