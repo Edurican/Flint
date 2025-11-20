@@ -41,11 +41,16 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: period
+  - type: dropdown
+    id: priority
     attributes:
-      label: 'Period'
-      description: '작업 기간'
+      label: 'priority'
+      description: '작업순서 결정'
+      options:
+        - highest
+        - high
+        - low
+        - lowest
     validations:
       required: true
 
