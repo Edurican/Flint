@@ -1,0 +1,71 @@
+[
+  { "Repository": "적용할 레포지토리 이름" },
+  [
+    {
+      "name": "✔ Status:Done",
+      "color": "0E8A16",
+      "description": "작업 완료",
+      "hex": "#0E8A16"
+    },
+    {
+      "name": "❗Ticket:Bug",
+      "color": "B60205",
+      "description": "버그",
+      "hex": "#B60205"
+    },
+    {
+      "name": "⏳ Status:Wait",
+      "color": "009966",
+      "description": "대기",
+      "hex": "#009966"
+    },
+    {
+      "name": "✨ Ticket:Feature",
+      "color": "1D76DB",
+      "description": "기능",
+      "hex": "#1D76DB"
+    },
+    {
+      "name": "🎀 Ticket:Design",
+      "color": "D93F0B",
+      "description": "디자인",
+      "hex": "#D93F0B"
+    },
+    {
+      "name": "📈 Ticket:Improvement",
+      "color": "5319E7",
+      "description": "개선사항",
+      "hex": "#5319E7"
+    },
+    {
+      "name": "📝 Ticket:Document",
+      "color": "006B75",
+      "description": "문서",
+      "hex": "#006B75"
+    },
+    {
+      "name": "📨 Ticket:Request",
+      "color": "0052CC",
+      "description": "요청사항",
+      "hex": "#0052CC"
+    },
+    {
+      "name": "🧼 Ticket:Refactor",
+      "color": "8A2BE2",
+      "description": "코드정리",
+      "hex": "#8A2BE2"
+    },
+    {
+      "name": "🛠 Status:In Progress",
+      "color": "3cb371",
+      "description": "작업 진행 중",
+      "hex": "#3cb371"
+    },
+    {
+      "name": "🧪 Ticket:Test",
+      "color": "FBCA04",
+      "description": "테스트",
+      "hex": "#FBCA04"
+    }
+  ]
+]
