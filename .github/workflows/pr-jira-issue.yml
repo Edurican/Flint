@@ -18,26 +18,27 @@ jobs:
           
           # 브랜치명에서 추출
           if [[ $BRANCH_NAME =~ ^(FLINT-[0-9]+) ]]; then
-            TICKET="${BASH_REMATCH[1]}"
-            echo "ticket=${TICKET}" >> $GITHUB_OUTPUT
-            echo "Found ticket: ${TICKET}"
-          
-            # 이슈 번호 추출
-            if [[ $BRANCH_NAME =~ ^FLINT-([0-9]+) ]]; then
-              echo "issue_number=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-            fi
+            echo "ticket=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+            echo "Found ticket in branch: ${BASH_REMATCH[1]}"
           # PR 제목에서 추출
           elif [[ $PR_TITLE =~ \[(FLINT-[0-9]+)\] ]]; then
-            TICKET="${BASH_REMATCH[1]}"
-            echo "ticket=${TICKET}" >> $GITHUB_OUTPUT
-            echo "Found ticket: ${TICKET}"
-          
-            if [[ $TICKET =~ FLINT-([0-9]+) ]]; then
-              echo "issue_number=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-            fi
+            echo "ticket=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+            echo "Found ticket in title: ${BASH_REMATCH[1]}"
           else
             echo "No Jira ticket found"
             exit 0
+          fi
+
+      - name: Get linked GitHub issue number
+        id: get-issue
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          # "Closes #123" 또는 "Fixes #123" 패턴 찾기
+          if [[ $PR_BODY =~ (Closes|Fixes|Resolves)[[:space:]]+#([0-9]+) ]]; then
+            echo "issue_number=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
+            echo "Found linked issue: #${BASH_REMATCH[2]}"
+          else
+            echo "No linked issue found in PR body"
           fi
 
       - name: Login to Jira
@@ -48,60 +49,61 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
 
-      # ========== PR 머지된 경우 ==========
-      - name: Transition to Done (if merged)
+      # ========== PR 머지된 경우 (Merge/Squash/Rebase 모두 포함) ==========
+      - name: Transition to Done
         if: steps.extract.outputs.ticket && github.event.pull_request.merged == true
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ steps.extract.outputs.ticket }}
-          transition: "완료"
+          transition: "완료"  # Jira 워크플로우 설정에 맞게 조정
 
-      - name: Delete branch (if merged)
+      - name: Delete merged branch
         if: steps.extract.outputs.ticket && github.event.pull_request.merged == true
         run: |
           git push origin --delete ${{ github.head_ref }} || echo "Branch already deleted"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Close related GitHub issue (if merged)
-        if: steps.extract.outputs.issue_number && github.event.pull_request.merged == true
+      - name: Close linked GitHub issue
+        if: steps.get-issue.outputs.issue_number && github.event.pull_request.merged == true
         uses: actions-cool/issues-helper@v3
         with:
           actions: 'close-issue'
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ steps.extract.outputs.issue_number }}
+          issue-number: ${{ steps.get-issue.outputs.issue_number }}
 
-      - name: Add completion comment (if merged)
-        if: steps.extract.outputs.issue_number && github.event.pull_request.merged == true
+      - name: Add completion comment to issue
+        if: steps.get-issue.outputs.issue_number && github.event.pull_request.merged == true
         uses: actions-cool/issues-helper@v3
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ steps.extract.outputs.issue_number }}
+          issue-number: ${{ steps.get-issue.outputs.issue_number }}
           body: |
             ✅ 작업 완료
             
             - PR: #${{ github.event.pull_request.number }}
             - Jira: [${{ steps.extract.outputs.ticket }}](${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.extract.outputs.ticket }})
+            - 상태: 완료
 
-      # ========== PR 취소된 경우 ==========
-      - name: Transition to In Progress (if cancelled)
+      # ========== PR 취소된 경우 (Close without merge) ==========
+      - name: Transition to In Progress
         if: steps.extract.outputs.ticket && github.event.pull_request.merged == false
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ steps.extract.outputs.ticket }}
-          transition: "진행 중"
+          transition: "진행 중"  # Jira 워크플로우 설정에 맞게 조정
 
-      - name: Add cancellation comment (if cancelled)
-        if: steps.extract.outputs.issue_number && github.event.pull_request.merged == false
+      - name: Add cancellation comment to issue
+        if: steps.get-issue.outputs.issue_number && github.event.pull_request.merged == false
         uses: actions-cool/issues-helper@v3
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ steps.extract.outputs.issue_number }}
+          issue-number: ${{ steps.get-issue.outputs.issue_number }}
           body: |
             ⚠️ PR이 취소되었습니다
             
             - PR: #${{ github.event.pull_request.number }}
-            - Jira 상태: In Progress로 변경됨
+            - Jira 상태: 진행 중으로 변경됨
             - 브랜치와 이슈는 유지됩니다
