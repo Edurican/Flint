@@ -3,19 +3,6 @@ description: 'Repo에 이슈를 생성하며, 생성된 이슈는 Jira와 연동
 labels: [feat]
 title: '이슈 이름을 작성해주세요'
 body:
-  - type: dropdown
-    id: type
-    attributes:
-      label: '이슈 타입'
-      description: '이슈의 타입을 설정'
-      options:
-        - epic
-        - story
-        - task
-        - sub-task
-    validations:
-      required: true
-      
   - type: input
     id: parentKey
     attributes:
@@ -24,34 +11,12 @@ body:
       placeholder: 'FLINT-00'
     validations:
       required: true
-
-  - type: input
-    id: branch
-    attributes:
-      label: 'Branch'
-      description: '작업할 브랜치 이름'
-    validations:
-      required: true
       
   - type: input
     id: description
     attributes:
       label: 'Description'
       description: '이슈에 대한 간략한 설명'
-    validations:
-      required: true
-
-  - type: dropdown
-    id: priority
-    attributes:
-      label: 'priority'
-      description: '작업순서 결정'
-      options:
-        - highest
-        - high
-        - medium
-        - low
-        - lowest
     validations:
       required: true
 
