@@ -41,13 +41,7 @@ public class FollowController {
             @PathVariable String username,
             @Valid @ModelAttribute CursorRequest cursor
     ) {
-        Cursor<Follow> result = followService.getFollowers(username, cursor);
-        return ApiResult.success(new CursorResponse<>(
-                FollowResponse.of(result.getContents()),
-                result.getLastFetchedId(),
-                result.getHasNext(),
-                result.getNextType()
-        ));
+        return ApiResult.success(followService.getFollowers(username, cursor));
     }
 
     @GetMapping("api/v1/{username}/following")
@@ -61,14 +55,7 @@ public class FollowController {
             @PathVariable String username,
             @Valid @ModelAttribute CursorRequest cursor
     ) {
-        Cursor<Follow> result = followService.getFollowing(username, cursor);
-        return ApiResult.success(new CursorResponse<>(
-                        FollowResponse.of(result.getContents()),
-                        result.getLastFetchedId(),
-                        result.getHasNext(),
-                        result.getNextType()
-                )
-        );
+        return ApiResult.success(followService.getFollowing(username, cursor));
     }
 
     @GetMapping("/api/v1/search")
@@ -82,14 +69,7 @@ public class FollowController {
             @PathVariable(name = "keyword", required = false) String keyword,
             @Valid @ModelAttribute CursorRequest cursor
     ) {
-        Cursor<Follow> result = followService.searchFollow(userDetails.getUser(), keyword, cursor);
-        return ApiResult.success(new CursorResponse<>(
-                        FollowResponse.of(result.getContents()),
-                        result.getLastFetchedId(),
-                        result.getHasNext(),
-                        result.getNextType()
-                )
-        );
+        return ApiResult.success(followService.searchFollow(userDetails.getUser(), keyword, cursor));
     }
 
     @PostMapping("/api/v1/{userId}/follow")

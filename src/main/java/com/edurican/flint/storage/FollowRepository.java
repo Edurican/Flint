@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface FollowRepository extends JpaRepository<FollowEntity, Long>, FollowRepositoryCustom  {
+public interface FollowRepository extends JpaRepository<Follow, Long>, FollowRepositoryCustom  {
     boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
     int deleteByFollowerIdAndFollowingId(Long followerId, Long followingId);
 }
