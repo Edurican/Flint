@@ -2,7 +2,6 @@ package com.edurican.flint.core.support.auth;
 
 import com.edurican.flint.core.domain.User;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
-import com.edurican.flint.storage.UserEntity;
 import com.edurican.flint.storage.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -45,7 +44,7 @@ import java.io.IOException;
                     Claims userInfo = jwtUtil.getUserFromJwtToken(token);
                     String username = userInfo.getSubject();
 
-                    UserEntity user = userRepository.findByUsername(username).orElseThrow(
+                    User user = userRepository.findByUsername(username).orElseThrow(
                             () -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
                     // 11.01 세번째 인자 권한은 추후 수정 예정

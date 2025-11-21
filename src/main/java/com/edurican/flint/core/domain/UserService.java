@@ -11,7 +11,6 @@ import com.edurican.flint.core.support.auth.JwtUtil;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
-import com.edurican.flint.storage.UserEntity;
 import com.edurican.flint.storage.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,7 @@ public class UserService {
                     throw new CoreException(ErrorType.USER_DUPLICATE_EMAIL);
                 });
 
-        UserEntity user = new UserEntity(username, password, email, role);
+        User user = new User(username, password, email, role);
         userRepository.save(user);
     }
 
@@ -58,7 +57,7 @@ public class UserService {
         String email = loginRequestDto.getEmail();
         String password = loginRequestDto.getPassword();
 
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+        User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new CoreException(ErrorType.USER_NOT_FOUND_BY_EMAIL)
         );
 
@@ -77,7 +76,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserProfileResponse getUserProfileByUsername(String username) {
-        UserEntity user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         long postCount = postService.getPostCountByUserId(user.getId());
@@ -91,7 +90,7 @@ public class UserService {
     @Transactional
     public String updateProfile(UserDetailsImpl userDetails, ProfileUpdateRequestDto profileUpdateRequestDto) {
         Long userId = userDetails.getUser().getId();
-        UserEntity user = userRepository.findById(userId).orElseThrow(
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         String newUsername = profileUpdateRequestDto.getUsername();

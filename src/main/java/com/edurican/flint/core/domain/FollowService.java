@@ -1,27 +1,19 @@
 package com.edurican.flint.core.domain;
 
 
+import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
 import com.edurican.flint.core.support.Cursor;
-import com.edurican.flint.core.support.OffsetLimit;
-import com.edurican.flint.core.support.Page;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
-import com.edurican.flint.core.support.utils.CursorUtil;
+import com.edurican.flint.core.support.request.CursorRequest;
+import com.edurican.flint.core.support.response.CursorResponse;
 import com.edurican.flint.storage.*;
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class FollowService {
@@ -39,175 +31,123 @@ public class FollowService {
      * 유저의 follower 얻기
      */
     @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowers(String username, Long lastFetchedId, Integer limit) {
-        
+    public CursorResponse<FollowResponse> getFollowers(String username, CursorRequest cursor) {
+
         // 유저 조회
-        UserEntity user = userRepository.findByUsername(username).orElseThrow(
-                () -> new CoreException(ErrorType.USER_NOT_FOUND)
-        );
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        // 팔로워 조회
-        Slice<FollowEntity> followers = followRepository.findByFollowingIdWithCursor(
+        // 유저 팔로워 조회
+        Cursor<FollowResponse> followers = followRepository.findFollowersByUserId(
                 user.getId(),
-                CursorUtil.getCursor(lastFetchedId),
-                PageRequest.of(0, limit)
+                cursor.getLastFetchedId(),
+                cursor.getLimit()
         );
 
-        // 유저 정보를 얻기 위한 Id 분리
-        List<Long> followerIds = followers.getContent().stream()
-                .map(FollowEntity::getFollowerId)
-                .toList();
-
-        // 유저 정보 얻기
-        Map<Long, UserEntity> users = userRepository.findAllById(followerIds).stream()
-                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
-
-        // 정보 변환
-        List<Follow> follows = followers.getContent().stream()
-                .map(follow -> Follow.builder()
-                        .id(follow.getId())
-                        .followId(follow.getFollowerId())
-                        .username(users.get(follow.getFollowerId()).getUsername())
-                        .followedAt(follow.getCreatedAt())
-                        .build()
-                )
-                .toList();
-
-        return new Cursor<>(
-                follows,
-                CursorUtil.nextCursor(followers.getContent()).getId(),
-                CursorUtil.hasNextCursor(followers.getContent(), limit)
-        );
+        return CursorResponse.of(followers);
     }
 
     /**
      * 유저의 following 얻기
      */
     @Transactional(readOnly = true)
-    public Cursor<Follow> getFollowing(String username, Long lastFetchedId, Integer limit) {
+    public CursorResponse<FollowResponse> getFollowing(String username, CursorRequest cursor) {
 
-        // 유저 존재하는지 확인
-        UserEntity user = userRepository.findByUsername(username).orElseThrow(
-                () -> new CoreException(ErrorType.USER_NOT_FOUND)
-        );
+        // 유저 조회
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        // 팔로잉 조회
-        Slice<FollowEntity> following = followRepository.findByFollowerIdWithCursor(
+        // 유저 팔로잉 조회
+        Cursor<FollowResponse> following = followRepository.findFollowingsByUserId(
                 user.getId(),
-                CursorUtil.getCursor(lastFetchedId),
-                PageRequest.of(0, limit)
+                cursor.getLastFetchedId(),
+                cursor.getLimit()
         );
 
-        // 유저 정보를 얻기 위한 Id 분리
-        List<Long> followerIds = following.getContent().stream()
-                .map(FollowEntity::getFollowingId)
-                .toList();
-
-        // 유저 정보 얻기
-        Map<Long, UserEntity> users = userRepository.findAllById(followerIds).stream()
-                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
-
-        // 정보 변환
-        List<Follow> follows = following.getContent().stream()
-                .map(follow -> Follow.builder()
-                        .id(follow.getId())
-                        .followId(follow.getFollowingId())
-                        .username(users.get(follow.getFollowingId()).getUsername())
-                        .followedAt(follow.getCreatedAt())
-                        .build()
-                )
-                .toList();
-
-        return new Cursor<>(
-                follows,
-                CursorUtil.nextCursor(following.getContent()).getId(),
-                CursorUtil.hasNextCursor(following.getContent(), limit)
-        );
+        return CursorResponse.of(following);
     }
 
     /**
-     * 팔로우 추천 피드
+     *  팔로우 검색 (최신순)
      */
-    public Cursor<User> searchFollow(UserEntity user, String searchUser, Long lastFetchedId, Integer limit) {
+    public CursorResponse<FollowResponse> searchFollow(User user, String keyword, CursorRequest cursor) {
 
-        // 유저 존재하는지 확인
-        if (!userRepository.existsById(user.getId())) {
+        // 유저 조회
+        if(!userRepository.existsById(user.getId())) {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
-        // 팔로우 최신 버전
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-        Pageable pageable = PageRequest.of(0, limit);
-        Slice<UserEntity> userEntities = userRepository.searchByUsernameWithCursor(user.getId(), searchUser, cursor, pageable);
+        // 유저 검색
+        Cursor<FollowResponse> searchUsers = followRepository.searchUsers(
+                user.getId(),
+                keyword,
+                cursor.getLastFetchedId(),
+                cursor.getLimit()
+        );
 
-        // 정보 변환
-        List<User> users = userEntities.getContent().stream()
-                .map(entity -> User.builder()
-                        .id(entity.getId())
-                        .username(entity.getUsername())
-                        .bio(entity.getBio())
-                        .build()
-                )
-                .toList();
-
-        Long nextCursor = (userEntities.getContent().isEmpty()) ? null : userEntities.getContent().get(userEntities.getContent().size() - 1).getId();
-        Boolean hasNext = (userEntities.getContent().size() == limit) ? true : false;
-        return new Cursor<>(users, nextCursor, hasNext);
+        return CursorResponse.of(searchUsers);
     }
 
     /**
-     * 팔로우
+     * 유저 팔로우
      */
     @Transactional
-    public void follow(Long userId, Long followId) {
+    @Retryable(
+            retryFor = OptimisticLockException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100)
+    )
+    public void follow(Long followerId, Long followingId) {
 
-        // 유저 이름 같은지 확인
-        if (userId.equals(followId)) {
-            throw new CoreException(ErrorType.DEFAULT_ERROR);
+        // 자기 자신을 팔로우 할 수 없음
+        if (followerId.equals(followingId)) {
+            throw new CoreException(ErrorType.SELF_FOLLOW_NOT_ALLOWED);
         }
 
-        // UserEntity에서 조회 후 팔로워는 user, 팔로잉 하는 대상은 followId로 대입
-        UserEntity follower = userRepository.findById(userId)
+        // 유저 팔로우 또는 맞팔로우
+        followRepository.save(new Follow(followerId, followingId));
+
+        // 팔로워 유저 팔로잉 1 증가
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+        follower.incrementFollowingCount();
 
-        UserEntity following = userRepository.findById(followId)
+        // 팔로잉 유저 팔로워 1 증가
+        User following = userRepository.findById(followingId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-
-        // 저장
-        try {
-            followRepository.save(new FollowEntity(userId, followId));
-            // 본인은 팔로잉 +1
-            follower.incrementFollowingCount();
-
-            // 팔로우 대상은 팔로워 +1
-            following.incrementFollowersCount();
-        } catch (Exception e) {
-            throw new CoreException(ErrorType.DEFAULT_ERROR);
-        }
+        following.incrementFollowersCount();
     }
 
     /**
-     * 언팔로우
+     * 유저 언팔로우
      */
     @Transactional
-    public void unfollow(Long userId, Long unfollowId) {
+    @Retryable(
+            retryFor = OptimisticLockException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100)
+    )
+    public void unfollow(Long followerId, Long followingId) {
 
-        UserEntity follower = userRepository.findById(userId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+        // 자기 자신을 언팔로우 할 수 없음
+        if (followerId.equals(followingId)) {
+            throw new CoreException(ErrorType.SELF_FOLLOW_NOT_ALLOWED);
+        }
 
-        UserEntity following = userRepository.findById(unfollowId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-
-        // 삭제
-        int deleteCount = followRepository.deleteByFollowerIdAndFollowingId(userId, unfollowId);
+        // 유저 언팔로우
+        int deleteCount = followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
         if (deleteCount <= 0) {
-            throw new CoreException(ErrorType.DEFAULT_ERROR);
+            throw new CoreException(ErrorType.NOT_FOLLOWING);
         }
 
-        // 본인은 팔로잉 -1
+        // 팔로워 유저 팔로잉 1 감소
+        User follower = userRepository.findById(followerId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         follower.decrementFollowingCount();
 
-        // 언팔로우 대상은 팔로워 -1
+        // 팔로잉 유저 팔로워 1 감소
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         following.decrementFollowersCount();
     }
 }

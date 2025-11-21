@@ -4,6 +4,8 @@ public enum ErrorCode {
 
     // Don't use (0 ~ 1000)
     E500,
+    E400,
+
     // Common (1000)
     COMMON_1000,
 
