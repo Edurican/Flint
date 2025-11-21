@@ -1,4 +1,4 @@
-package com.edurican.flint.storage;
+package com.edurican.flint.core.domain;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -12,17 +12,17 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QFollowEntity is a Querydsl query type for FollowEntity
+ * QFollow is a Querydsl query type for Follow
  */
 @SuppressWarnings("this-escape")
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QFollowEntity extends EntityPathBase<FollowEntity> {
+public class QFollow extends EntityPathBase<Follow> {
 
-    private static final long serialVersionUID = 1754559914L;
+    private static final long serialVersionUID = 1791915759L;
 
-    public static final QFollowEntity followEntity = new QFollowEntity("followEntity");
+    public static final QFollow follow = new QFollow("follow");
 
-    public final QBaseEntity _super = new QBaseEntity(this);
+    public final com.edurican.flint.storage.QBaseEntity _super = new com.edurican.flint.storage.QBaseEntity(this);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
@@ -37,16 +37,16 @@ public class QFollowEntity extends EntityPathBase<FollowEntity> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
-    public QFollowEntity(String variable) {
-        super(FollowEntity.class, forVariable(variable));
+    public QFollow(String variable) {
+        super(Follow.class, forVariable(variable));
     }
 
-    public QFollowEntity(Path<? extends FollowEntity> path) {
+    public QFollow(Path<? extends Follow> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QFollowEntity(PathMetadata metadata) {
-        super(FollowEntity.class, metadata);
+    public QFollow(PathMetadata metadata) {
+        super(Follow.class, metadata);
     }
 
 }

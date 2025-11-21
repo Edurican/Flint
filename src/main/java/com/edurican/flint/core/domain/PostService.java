@@ -37,7 +37,7 @@ public class PostService {
 
     @Transactional
     public boolean create(Long userId, String content, Long topicId) {
-        UserEntity user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         PostEntity post = new PostEntity();
@@ -95,7 +95,7 @@ public class PostService {
         post.increaseViewCont();
         postRepository.save(post);
 
-        UserEntity userE = this.userRepository.findById(post.getUserId()).orElse(null);
+        User userE = this.userRepository.findById(post.getUserId()).orElse(null);
         TopicEntity topicE = this.topicRepository.findById(post.getTopicId()).orElse(null);
 
         String username = userE.getUsername();
@@ -120,8 +120,8 @@ public class PostService {
         List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
 
         //유저 아이디의 유저 정보 얻기
-        Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
 
         //토픽 아이디의 토픽 정보 얻기
         Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
@@ -130,7 +130,7 @@ public class PostService {
         // 도메인 변환 (add username/topicName)
         return posts.stream()
                 .map(postE -> {
-                    UserEntity userE = userMap.get(postE.getUserId());
+                    User userE = userMap.get(postE.getUserId());
                     TopicEntity topicE = topicMap.get(postE.getTopicId());
                     String username = (userE != null) ? userE.getUsername() : "";
                     String topicName = (topicE != null) ? topicE.getTopicName() : "";
@@ -175,7 +175,7 @@ public class PostService {
 
     // 게시물 중 username을 가져와 그 사용자의 Id를 전달
     public List<Post> getPostsByUsername(String username) {
-        UserEntity user = userRepository.findByUsername(username).
+        User user = userRepository.findByUsername(username).
                 orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         return getPostsByUserId(user.getId());
@@ -202,8 +202,8 @@ public class PostService {
         List<Long> userIds  = posts.stream().map(PostEntity::getUserId).distinct().toList();
         List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
 
-        Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
 
         Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
                 .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
@@ -213,7 +213,7 @@ public class PostService {
                 .filter(Objects::nonNull)
                 .map(postE -> {
                     String username  = Optional.ofNullable(userMap.get(postE.getUserId()))
-                            .map(UserEntity::getUsername).orElse("");
+                            .map(User::getUsername).orElse("");
                     String topicName = Optional.ofNullable(topicMap.get(postE.getTopicId()))
                             .map(TopicEntity::getTopicName).orElse("");
                     return Post.of(postE, username, topicName);

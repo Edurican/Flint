@@ -43,14 +43,14 @@ public class PostFeed {
             List<Long> userIds = postEntityList.stream().map(PostEntity::getUserId).distinct().toList();
             List<Long> topicIds = postEntityList.stream().map(PostEntity::getTopicId).distinct().toList();
             
-            Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
-                    .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+            Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                    .collect(Collectors.toMap(User::getId, Function.identity()));
             Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
                     .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
             
             List<Post> posts = postEntityList.stream()
                     .map(postE -> {
-                        UserEntity userE = userMap.get(postE.getUserId());
+                        User userE = userMap.get(postE.getUserId());
                         TopicEntity topicE = topicMap.get(postE.getTopicId());
                         String username = (userE != null) ? userE.getUsername() : "";
                         String topicName = (topicE != null) ? topicE.getTopicName() : "";
@@ -98,14 +98,14 @@ public class PostFeed {
         List<Long> userIds = postEntityList.stream().map(PostEntity::getUserId).distinct().toList();
         List<Long> topicIds = postEntityList.stream().map(PostEntity::getTopicId).distinct().toList();
         
-        Map<Long, UserEntity> userMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
         Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
                 .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
         
         List<Post> posts = postEntityList.stream()
                 .map(postE -> {
-                    UserEntity userE = userMap.get(postE.getUserId());
+                    User userE = userMap.get(postE.getUserId());
                     TopicEntity topicE = topicMap.get(postE.getTopicId());
                     String username = (userE != null) ? userE.getUsername() : "";
                     String topicName = (topicE != null) ? topicE.getTopicName() : "";

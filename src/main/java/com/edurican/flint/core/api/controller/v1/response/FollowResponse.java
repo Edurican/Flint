@@ -13,20 +13,4 @@ public record FollowResponse(
     Boolean isFollow
 ) {
 
-    public static FollowResponse of(Follow follow) {
-        return new FollowResponse(
-                follow.userId(),
-                follow.name(),
-                follow.username(),
-                follow.bio(),
-                follow.followersCount(),
-                follow.isFollow()
-        );
-    }
-
-    public static List<FollowResponse> of(List<Follow> follows) {
-        return follows.stream()
-                .map(FollowResponse::of)
-                .toList();
-    }
 }

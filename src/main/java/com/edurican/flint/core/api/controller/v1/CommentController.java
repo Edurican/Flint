@@ -126,11 +126,11 @@ public class CommentController {
         Cursor<CommentSearchResponse> cur =
                 commentService.getCommentsWithCursor(postId, depth, lastFetchedId, limit);
 
-        CursorResponse<CommentSearchResponse> body = CursorResponse.<CommentSearchResponse>builder()
-                .contents(cur.getContents())
-                .lastFetchedId(cur.getLastFetchedId())
-                .hasNext(cur.getHasNext())
-                .build();
+        CursorResponse<CommentSearchResponse> body = new CursorResponse<>(
+                cur.getContents(),
+                cur.getLastFetchedId(),
+                cur.getHasNext()
+        );
 
         return ApiResult.success(body);
     }

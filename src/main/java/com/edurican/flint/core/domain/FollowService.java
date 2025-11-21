@@ -7,18 +7,13 @@ import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.request.CursorRequest;
 import com.edurican.flint.core.support.response.CursorResponse;
-import com.edurican.flint.core.support.utils.CursorUtil;
 import com.edurican.flint.storage.*;
 import jakarta.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class FollowService {
@@ -38,23 +33,18 @@ public class FollowService {
     @Transactional(readOnly = true)
     public CursorResponse<FollowResponse> getFollowers(String username, CursorRequest cursor) {
 
-        // 유저 존재하는지 확인
-        if (!userRepository.existsByUsername(username)) {
-            throw new CoreException(ErrorType.USER_NOT_FOUND);
-        }
+        // 유저 조회
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         // 유저 팔로워 조회
-        Cursor<Follow> followers = followRepository.findFollowersByUsername(
-                username,
+        Cursor<FollowResponse> followers = followRepository.findFollowersByUserId(
+                user.getId(),
                 cursor.getLastFetchedId(),
                 cursor.getLimit()
         );
 
-        return new CursorResponse<>(
-                FollowResponse.of(followers.getContents()),
-                followers.getLastFetchedId(),
-                followers.getHasNext()
-        );
+        return CursorResponse.of(followers);
     }
 
     /**
@@ -63,48 +53,39 @@ public class FollowService {
     @Transactional(readOnly = true)
     public CursorResponse<FollowResponse> getFollowing(String username, CursorRequest cursor) {
 
-        // 유저 존재하는지 확인
-        if (!userRepository.existsByUsername(username)) {
-            throw new CoreException(ErrorType.USER_NOT_FOUND);
-        }
+        // 유저 조회
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         // 유저 팔로잉 조회
-        Cursor<Follow> following = followRepository.findFollowingByUsername(
-                username,
+        Cursor<FollowResponse> following = followRepository.findFollowingsByUserId(
+                user.getId(),
                 cursor.getLastFetchedId(),
                 cursor.getLimit()
         );
 
-        return new CursorResponse<>(
-                FollowResponse.of(following.getContents()),
-                following.getLastFetchedId(),
-                following.getHasNext()
-        );
+        return CursorResponse.of(following);
     }
 
     /**
      *  팔로우 검색 (최신순)
      */
-    public CursorResponse<FollowResponse> searchFollow(UserEntity user, String keyword, CursorRequest cursor) {
+    public CursorResponse<FollowResponse> searchFollow(User user, String keyword, CursorRequest cursor) {
 
-        // 유저 존재하는지 확인
-        if (!userRepository.existsById(user.getId())) {
+        // 유저 조회
+        if(!userRepository.existsById(user.getId())) {
             throw new CoreException(ErrorType.USER_NOT_FOUND);
         }
 
-        // 팔로우 검색
-        Cursor<Follow> searched = followRepository.findFollowersNotFollowBack(
+        // 유저 검색
+        Cursor<FollowResponse> searchUsers = followRepository.searchUsers(
                 user.getId(),
                 keyword,
                 cursor.getLastFetchedId(),
                 cursor.getLimit()
         );
 
-        return new CursorResponse<>(
-                FollowResponse.of(searched.getContents()),
-                searched.getLastFetchedId(),
-                searched.getHasNext()
-        );
+        return CursorResponse.of(searchUsers);
     }
 
     /**
@@ -127,12 +108,12 @@ public class FollowService {
         followRepository.save(new Follow(followerId, followingId));
 
         // 팔로워 유저 팔로잉 1 증가
-        UserEntity follower = userRepository.findById(followerId)
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         follower.incrementFollowingCount();
 
         // 팔로잉 유저 팔로워 1 증가
-        UserEntity following = userRepository.findById(followingId)
+        User following = userRepository.findById(followingId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         following.incrementFollowersCount();
     }
@@ -160,12 +141,12 @@ public class FollowService {
         }
 
         // 팔로워 유저 팔로잉 1 감소
-        UserEntity follower = userRepository.findById(followerId)
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         follower.decrementFollowingCount();
 
         // 팔로잉 유저 팔로워 1 감소
-        UserEntity following = userRepository.findById(followingId)
+        User following = userRepository.findById(followingId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         following.decrementFollowersCount();
     }

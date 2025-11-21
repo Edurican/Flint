@@ -1,4 +1,4 @@
-package com.edurican.flint.storage;
+package com.edurican.flint.core.domain;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -12,17 +12,17 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QUserEntity is a Querydsl query type for UserEntity
+ * QUser is a Querydsl query type for User
  */
 @SuppressWarnings("this-escape")
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QUserEntity extends EntityPathBase<UserEntity> {
+public class QUser extends EntityPathBase<User> {
 
-    private static final long serialVersionUID = -941269052L;
+    private static final long serialVersionUID = 60415625L;
 
-    public static final QUserEntity userEntity = new QUserEntity("userEntity");
+    public static final QUser user = new QUser("user");
 
-    public final QBaseSoftEntity _super = new QBaseSoftEntity(this);
+    public final com.edurican.flint.storage.QBaseSoftEntity _super = new com.edurican.flint.storage.QBaseSoftEntity(this);
 
     public final StringPath bio = createString("bio");
 
@@ -56,16 +56,16 @@ public class QUserEntity extends EntityPathBase<UserEntity> {
 
     public final NumberPath<Long> version = createNumber("version", Long.class);
 
-    public QUserEntity(String variable) {
-        super(UserEntity.class, forVariable(variable));
+    public QUser(String variable) {
+        super(User.class, forVariable(variable));
     }
 
-    public QUserEntity(Path<? extends UserEntity> path) {
+    public QUser(Path<? extends User> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QUserEntity(PathMetadata metadata) {
-        super(UserEntity.class, metadata);
+    public QUser(PathMetadata metadata) {
+        super(User.class, metadata);
     }
 
 }
