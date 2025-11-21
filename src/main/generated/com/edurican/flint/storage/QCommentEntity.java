@@ -48,6 +48,8 @@ public class QCommentEntity extends EntityPathBase<CommentEntity> {
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 
+    public final StringPath username = createString("username");
+
     public QCommentEntity(String variable) {
         super(CommentEntity.class, forVariable(variable));
     }

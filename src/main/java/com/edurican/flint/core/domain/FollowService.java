@@ -44,7 +44,11 @@ public class FollowService {
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(followers);
+        return new CursorResponse<>(
+                followers.getContents(),
+                followers.getLastFetchedId(),
+                followers.getHasNext()
+        );
     }
 
     /**
@@ -64,7 +68,11 @@ public class FollowService {
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(following);
+        return new CursorResponse<>(
+                following.getContents(),
+                following.getLastFetchedId(),
+                following.getHasNext()
+        );
     }
 
     /**
@@ -85,7 +93,11 @@ public class FollowService {
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(searchUsers);
+        return new CursorResponse<>(
+                searchUsers.getContents(),
+                searchUsers.getLastFetchedId(),
+                searchUsers.getHasNext()
+        );
     }
 
     /**

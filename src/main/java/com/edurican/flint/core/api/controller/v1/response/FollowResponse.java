@@ -6,6 +6,7 @@ import java.util.List;
 
 public record FollowResponse(
     Long userId,
+    Long followId,
     String username,
     String name,
     String bio,
