@@ -6,17 +6,21 @@ import lombok.Getter;
 @Getter
 public class UserProfileResponse {
 
+    private Long id;
     private String username;
     private String bio;
     private Integer followersCount;
     private Integer followingCount;
     private Long postCount;
+    private Boolean isFollowing;
 
-    public UserProfileResponse(User user, Long postCount) {
+    public UserProfileResponse(User user, Long postCount, Boolean isFollowing) {
+        this.id = user.getId();
         this.username = user.getUsername();
         this.bio = user.getBio();
         this.followersCount = user.getFollowersCount();
         this.followingCount = user.getFollowingCount();
         this.postCount = postCount;
+        this.isFollowing = isFollowing;
     }
 }

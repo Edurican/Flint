@@ -7,5 +7,5 @@ import com.edurican.flint.core.support.Cursor;
 public interface FollowRepositoryCustom {
     Cursor<FollowResponse> findFollowingsByUserId(Long userId, Long lastFetchedId, Integer limit);
     Cursor<FollowResponse> findFollowersByUserId(Long userId, Long lastFetchedId, Integer limit);
-    Cursor<FollowResponse> searchUsers(Long userId, String keyword, Long lastFetchedId, Integer limit);
+    Cursor<FollowResponse> searchUsers(Long userId, String username, Long lastFetchedId, Integer limit);
 }

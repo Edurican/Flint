@@ -38,8 +38,6 @@ public class QUser extends EntityPathBase<User> {
     //inherited
     public final NumberPath<Long> id = _super.id;
 
-    public final StringPath name = createString("name");
-
     public final StringPath password = createString("password");
 
     public final NumberPath<Long> postCount = createNumber("postCount", Long.class);

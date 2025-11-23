@@ -1,13 +1,12 @@
 package com.edurican.flint.storage;
 
 import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
-import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.QFollow;
 import com.edurican.flint.core.domain.QUser;
-import com.edurican.flint.core.domain.User;
 import com.edurican.flint.core.support.Cursor;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +32,8 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(follow.followerId.eq(userId));
 
-        // 마지막으로 검색된 아이디가 있다면
-        if (lastFetchedId != null) {
-            builder.and(follow.followingId.lt(lastFetchedId));
-        } else {
-            builder.and(follow.followingId.lt(Long.MAX_VALUE));
+        if(lastFetchedId != null) {
+            builder.and(user.id.lt(lastFetchedId));
         }
 
         List<FollowResponse> result = queryFactory
@@ -45,7 +41,6 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
                         user.id,
                         follow.id,
                         user.username,
-                        user.name,
                         user.bio,
                         user.followersCount,
                         JPAExpressions
@@ -62,14 +57,7 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
                 .limit(limit + 1)
                 .fetch();
 
-        boolean hasNext = result.size() > limit;
-        long nextCursor = 0L;
-        if(hasNext) {
-            result.remove(limit - 1);
-            nextCursor = result.get(result.size() - 1).followId();
-        }
-
-        return new Cursor<>(result, nextCursor, hasNext);
+        return makeCursor(result, limit);
     }
 
     /**
@@ -84,10 +72,8 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(follow.followingId.eq(userId));
 
-        if (lastFetchedId != null) {
-            builder.and(follow.followerId.lt(lastFetchedId));
-        } else {
-            builder.and(follow.followerId.lt(Long.MAX_VALUE));
+        if(lastFetchedId != null) {
+            builder.and(user.id.lt(lastFetchedId));
         }
 
         List<FollowResponse> result = queryFactory
@@ -95,56 +81,6 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
                         user.id,
                         follow.id,
                         user.username,
-                        user.name,
-                        user.bio,
-                        user.followersCount,
-                        JPAExpressions
-                                .selectOne()
-                                .from(followCheck)
-                                .where(followCheck.followingId.eq(userId)
-                                        .and(followCheck.followerId.eq(user.id)))
-                                .exists()
-                ))
-                .from(follow)
-                .join(user).on(user.id.eq(follow.followerId))
-                .where(builder)
-                .orderBy(follow.id.desc())
-                .limit(limit + 1)
-                .fetch();
-
-        boolean hasNext = result.size() > limit;
-        long nextCursor = 0L;
-        if(hasNext) {
-            result.remove(limit - 1);
-            nextCursor = result.get(result.size() - 1).followId();
-        }
-
-        return new Cursor<>(result, nextCursor, hasNext);
-    }
-
-    @Override
-    public Cursor<FollowResponse> searchUsers(Long userId, String keyword, Long lastFetchedId, Integer limit) {
-        QUser user = QUser.user;
-        QFollow follow = QFollow.follow;
-        QFollow followCheck = new QFollow("followCheck");
-
-        BooleanBuilder searchBuilder = new BooleanBuilder();
-        searchBuilder.and(user.username.like(keyword + "%").or(user.name.like(keyword + "%")));
-
-        BooleanBuilder mutal
-
-        if (lastFetchedId != null) {
-            searchBuilder.and(user.id.lt(lastFetchedId));
-        } else {
-            searchBuilder.and(user.id.lt(Long.MAX_VALUE));
-        }
-
-        List<FollowResponse> result = queryFactory
-                .select(Projections.constructor(FollowResponse.class,
-                        user.id,
-                        follow.id,
-                        user.username,
-                        user.name,
                         user.bio,
                         user.followersCount,
                         JPAExpressions
@@ -155,19 +91,85 @@ public class FollowRepositoryCustomImpl implements FollowRepositoryCustom {
                                 .exists()
                 ))
                 .from(follow)
-                .join(user).on(user.id.eq(follow.followingId))
-                .where(searchBuilder)
+                .join(user).on(user.id.eq(follow.followerId))
+                .where(builder)
                 .orderBy(follow.id.desc())
                 .limit(limit + 1)
                 .fetch();
 
+        return makeCursor(result, limit);
+    }
+
+    /**
+     *  유저 검색
+     */
+    @Override
+    public Cursor<FollowResponse> searchUsers(Long userId, String username, Long lastFetchedId, Integer limit) {
+        QUser user = QUser.user;
+        QFollow myFollow = new QFollow("myFollow");
+        QFollow otherFollow = new QFollow("otherFollow");
+
+        // builder
+        // - username 검색
+        // - 마지막 값보다 작은 값 조회
+        // - 자기 자신은 제외
+        // - 맞팔 제외
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if(username != null && !username.isBlank()) {
+            builder.and(user.username.like(username + "%"));
+        }
+
+        if(lastFetchedId != null) {
+            builder.and(user.id.lt(lastFetchedId));
+        }
+
+        builder.and(user.id.ne(userId));
+        builder.and(
+                JPAExpressions
+                        .selectOne()
+                        .from(myFollow)
+                        .where(myFollow.followerId.eq(userId).and(myFollow.followingId.eq(user.id)))
+                        .notExists()
+                        .or(
+                                JPAExpressions
+                                        .selectOne()
+                                        .from(otherFollow)
+                                        .where(otherFollow.followingId.eq(user.id).and(otherFollow.followerId.eq(userId)))
+                                        .notExists()
+                        )
+        );
+
+        List<FollowResponse> result = queryFactory
+                .select(Projections.constructor(FollowResponse.class,
+                        user.id,
+                        Expressions.constant(0L),
+                        user.username,
+                        user.bio,
+                        user.followersCount,
+                        JPAExpressions
+                                .selectOne()
+                                .from(otherFollow)
+                                .where(otherFollow.followerId.eq(user.id)
+                                        .and(otherFollow.followingId.eq(userId)))
+                                .exists()
+                ))
+                .from(user)
+                .where(builder)
+                .orderBy(user.id.desc())
+                .limit(limit + 1)
+                .fetch();
+
+        return makeCursor(result, limit);
+    }
+
+    private Cursor<FollowResponse> makeCursor(List<FollowResponse> result, Integer limit) {
         boolean hasNext = result.size() > limit;
         long nextCursor = 0L;
         if(hasNext) {
-            result.remove(limit - 1);
+            result.remove(limit.intValue());
             nextCursor = result.get(result.size() - 1).followId();
         }
-
         return new Cursor<>(result, nextCursor, hasNext);
     }
 }

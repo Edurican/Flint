@@ -78,7 +78,7 @@ public class FollowService {
     /**
      *  팔로우 검색 (최신순)
      */
-    public CursorResponse<FollowResponse> searchFollow(User user, String keyword, CursorRequest cursor) {
+    public CursorResponse<FollowResponse> searchFollow(User user, String username, CursorRequest cursor) {
 
         // 유저 조회
         if(!userRepository.existsById(user.getId())) {
@@ -88,7 +88,7 @@ public class FollowService {
         // 유저 검색
         Cursor<FollowResponse> searchUsers = followRepository.searchUsers(
                 user.getId(),
-                keyword,
+                username,
                 cursor.getLastFetchedId(),
                 cursor.getLimit()
         );

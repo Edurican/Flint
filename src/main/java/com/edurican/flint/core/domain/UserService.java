@@ -11,6 +11,7 @@ import com.edurican.flint.core.support.auth.JwtUtil;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
+import com.edurican.flint.storage.FollowRepository;
 import com.edurican.flint.storage.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,12 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PostService postService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PostService postService) {
+    public UserService(UserRepository userRepository, FollowRepository followRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PostService postService) {
         this.userRepository = userRepository;
+        this.followRepository = followRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.postService = postService;
@@ -75,13 +78,18 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserProfileResponse getUserProfileByUsername(String username) {
+    public UserProfileResponse getUserProfileByUsername(String username, Long currentUserId) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         long postCount = postService.getPostCountByUserId(user.getId());
 
-        return new UserProfileResponse(user, postCount);
+        boolean isFollowing = false;
+        if (currentUserId != null && !currentUserId.equals(user.getId())) {
+            isFollowing = followRepository.existsByFollowerIdAndFollowingId(currentUserId, user.getId());
+        }
+
+        return new UserProfileResponse(user, postCount, isFollowing);
     }
 
     /*
