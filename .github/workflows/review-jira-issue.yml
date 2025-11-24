@@ -4,7 +4,7 @@ on:
     types: [opened, reopened]
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 jobs:
   update-jira-status:
     runs-on: ubuntu-latest
@@ -25,6 +25,31 @@ jobs:
             echo "No Jira ticket found"
             exit 0
           fi
+
+      - name: Assign random reviewers
+        run: |
+          ALL_MEMBERS=("Apeirogon99" "ChoiKYH" "haengguk" "ucb1122")
+
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+
+          AVAILABLE_MEMBERS=()
+          for member in "${ALL_MEMBERS[@]}"; do
+            if [ "$member" != "$AUTHOR" ]; then
+              AVAILABLE_MEMBERS+=("$member")
+            fi
+          done
+          
+          SHUFFLED=($(printf '%s\n' "${AVAILABLE_MEMBERS[@]}" | shuf))
+          
+          REVIEWER1="${SHUFFLED[0]}"
+          REVIEWER2="${SHUFFLED[1]}"
+          
+          echo "Selected reviewers: $REVIEWER1, $REVIEWER2"
+          
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --add-reviewer "$REVIEWER1,$REVIEWER2"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Jira
         if: steps.extract.outputs.ticket
