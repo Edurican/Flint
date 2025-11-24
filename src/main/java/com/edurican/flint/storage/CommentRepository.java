@@ -1,5 +1,7 @@
 package com.edurican.flint.storage;
 
+
+import com.edurican.flint.core.domain.Comment;
 import com.edurican.flint.core.enums.EntityStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,13 +11,13 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
+public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    Optional<CommentEntity> findByIdAndStatus(Long id, EntityStatus status);
+    Optional<Comment> findByIdAndStatus(Long id, EntityStatus status);
 
     /** 특정 댓글의 자식 댓글 (대댓글, 대대댓글 포함) */
-    @Query("select c from CommentEntity c where c.postId = :postId and c.parentCommentId = :parentCommentId and c.status = 'ACTIVE' order by c.createdAt asc")
-    List<CommentEntity> findChildren(@Param("postId") Long postId, @Param("parentCommentId") Long parentCommentId);
+    @Query("select c from Comment c where c.postId = :postId and c.parentCommentId = :parentCommentId and c.status = 'ACTIVE' order by c.createdAt asc")
+    List<Comment> findChildren(@Param("postId") Long postId, @Param("parentCommentId") Long parentCommentId);
 
     @Query(value = """
         SELECT COUNT(1)
@@ -29,11 +31,11 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     long countByParentCommentIdAndStatus(Long parentCommentId, EntityStatus status);
 
     @Modifying
-    @Query("UPDATE CommentEntity c SET c.likeCount = c.likeCount + 1 WHERE c.id = :commentId")
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.id = :commentId")
     int incrementLikeCount(@Param("commentId") Long commentId);
 
     @Modifying
-    @Query("UPDATE CommentEntity c SET c.likeCount = c.likeCount - 1 WHERE c.id  = :commentId AND c.likeCount>0")
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.id  = :commentId AND c.likeCount>0")
     int decrementLikeCount(@Param("commentId") Long commentId);
 
     @Query(value = """
@@ -46,7 +48,7 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     ORDER BY c.id DESC
     LIMIT :limit
     """, nativeQuery = true)
-    List<CommentEntity> findRootCommentsWithCursor(
+    List<Comment> findRootCommentsWithCursor(
             @Param("postId") Long postId,
             @Param("cursor") Long cursor,
             @Param("limit") int limit);
@@ -54,8 +56,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     // 루트 댓글(rootId)의 depth2(손자) 개수
     @Query("""
     SELECT COUNT(gc)
-    FROM CommentEntity c
-    JOIN CommentEntity gc ON gc.parentCommentId = c.id
+    FROM Comment c
+    JOIN Comment gc ON gc.parentCommentId = c.id
     WHERE c.parentCommentId = :rootId
       AND c.status = com.edurican.flint.core.enums.EntityStatus.ACTIVE
       AND gc.status = com.edurican.flint.core.enums.EntityStatus.ACTIVE
