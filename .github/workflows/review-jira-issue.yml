@@ -9,6 +9,9 @@ jobs:
   update-jira-status:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Extract Jira ticket number
         id: extract
         run: |
@@ -29,9 +32,8 @@ jobs:
       - name: Assign random reviewers
         run: |
           ALL_MEMBERS=("Apeirogon99" "ChoiKYH" "haengguk" "ucb1122")
-
           AUTHOR="${{ github.event.pull_request.user.login }}"
-
+          
           AVAILABLE_MEMBERS=()
           for member in "${ALL_MEMBERS[@]}"; do
             if [ "$member" != "$AUTHOR" ]; then
@@ -40,7 +42,6 @@ jobs:
           done
           
           SHUFFLED=($(printf '%s\n' "${AVAILABLE_MEMBERS[@]}" | shuf))
-          
           REVIEWER1="${SHUFFLED[0]}"
           REVIEWER2="${SHUFFLED[1]}"
           
