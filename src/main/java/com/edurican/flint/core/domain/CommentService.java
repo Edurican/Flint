@@ -49,7 +49,7 @@ public class CommentService {
 
         // 부모 댓글이 있는 경우
         if (parentCommentId != null) {
-            CommentEntity parent = commentRepository
+            Comment parent = commentRepository
                     .findByIdAndStatus(parentCommentId, EntityStatus.ACTIVE)
                     .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
@@ -67,8 +67,8 @@ public class CommentService {
         }
 
         // 댓글 생성, 저장
-        CommentEntity comment = new CommentEntity(userId, postId, parentCommentId, username, depth, request.getContent());
-        CommentEntity saved = commentRepository.save(comment);
+        Comment comment = new Comment(userId, postId, parentCommentId, username, depth, request.getContent());
+        Comment saved = commentRepository.save(comment);
 
         return new CommentResponse(
                 saved.getId(),
@@ -90,7 +90,7 @@ public class CommentService {
     @Transactional
     public CommentResponse updateComment(Long userId, Long commentId, UpdateCommentRequest request) {
         // 댓글 존재 확인 및 작성자 확인
-        CommentEntity comment = commentRepository
+        Comment comment = commentRepository
                 .findByIdAndStatus(commentId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
@@ -124,7 +124,7 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
         // 댓글 존재 확인 및 작성자 확인
-        CommentEntity comment = commentRepository
+        Comment comment = commentRepository
                 .findByIdAndStatus(commentId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
         // 작성자 검증
@@ -141,7 +141,7 @@ public class CommentService {
     @Transactional
     public boolean likeComment(Long userId, Long commentId) {
 
-        CommentEntity comment = commentRepository
+        Comment comment = commentRepository
                 .findByIdAndStatus(commentId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
@@ -158,7 +158,7 @@ public class CommentService {
 
         // 2️⃣ 좋아요가 안 되어 있었다면: insert 시도 + like_count + 1
         try {
-            commentLikeRepository.save(new CommentLikeEntity(userId, commentId));
+            commentLikeRepository.save(new CommentLike(userId, commentId));
 
             int updated = commentRepository.incrementLikeCount(commentId);
             if (updated <= 0) {
@@ -185,7 +185,7 @@ public class CommentService {
 
         // limit+1로 가져와 hasNext 계산
         int fetchSize = limit + 1;
-        List<CommentEntity> rows;
+        List<Comment> rows;
 
         if (commentId == null) {
             // 1) 루트 댓글 조회 (depth=0), 최신순 (id DESC) + 커서
@@ -193,7 +193,7 @@ public class CommentService {
 //            log.info("=========================> {}", rows.size());
         } else {
             // 2) 특정 댓글의 자식 조회
-            CommentEntity base = commentRepository
+            Comment base = commentRepository
                     .findByIdAndStatus(commentId, EntityStatus.ACTIVE)
                     .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 

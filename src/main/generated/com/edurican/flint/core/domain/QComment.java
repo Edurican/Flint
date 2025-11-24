@@ -1,4 +1,4 @@
-package com.edurican.flint.storage;
+package com.edurican.flint.core.domain;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -12,17 +12,17 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QCommentEntity is a Querydsl query type for CommentEntity
+ * QComment is a Querydsl query type for Comment
  */
 @SuppressWarnings("this-escape")
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QCommentEntity extends EntityPathBase<CommentEntity> {
+public class QComment extends EntityPathBase<Comment> {
 
-    private static final long serialVersionUID = 1711726380L;
+    private static final long serialVersionUID = 1348213473L;
 
-    public static final QCommentEntity commentEntity = new QCommentEntity("commentEntity");
+    public static final QComment comment = new QComment("comment");
 
-    public final QBaseSoftEntity _super = new QBaseSoftEntity(this);
+    public final com.edurican.flint.storage.QBaseSoftEntity _super = new com.edurican.flint.storage.QBaseSoftEntity(this);
 
     public final StringPath content = createString("content");
 
@@ -50,16 +50,16 @@ public class QCommentEntity extends EntityPathBase<CommentEntity> {
 
     public final StringPath username = createString("username");
 
-    public QCommentEntity(String variable) {
-        super(CommentEntity.class, forVariable(variable));
+    public QComment(String variable) {
+        super(Comment.class, forVariable(variable));
     }
 
-    public QCommentEntity(Path<? extends CommentEntity> path) {
+    public QComment(Path<? extends Comment> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QCommentEntity(PathMetadata metadata) {
-        super(CommentEntity.class, metadata);
+    public QComment(PathMetadata metadata) {
+        super(Comment.class, metadata);
     }
 
 }

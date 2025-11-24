@@ -1,4 +1,4 @@
-package com.edurican.flint.storage;
+package com.edurican.flint.core.domain;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -12,17 +12,17 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QCommentLikeEntity is a Querydsl query type for CommentLikeEntity
+ * QCommentLike is a Querydsl query type for CommentLike
  */
 @SuppressWarnings("this-escape")
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QCommentLikeEntity extends EntityPathBase<CommentLikeEntity> {
+public class QCommentLike extends EntityPathBase<CommentLike> {
 
-    private static final long serialVersionUID = 964387107L;
+    private static final long serialVersionUID = 1027991064L;
 
-    public static final QCommentLikeEntity commentLikeEntity = new QCommentLikeEntity("commentLikeEntity");
+    public static final QCommentLike commentLike = new QCommentLike("commentLike");
 
-    public final QBaseEntity _super = new QBaseEntity(this);
+    public final com.edurican.flint.storage.QBaseEntity _super = new com.edurican.flint.storage.QBaseEntity(this);
 
     public final NumberPath<Long> commentId = createNumber("commentId", Long.class);
 
@@ -37,16 +37,16 @@ public class QCommentLikeEntity extends EntityPathBase<CommentLikeEntity> {
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 
-    public QCommentLikeEntity(String variable) {
-        super(CommentLikeEntity.class, forVariable(variable));
+    public QCommentLike(String variable) {
+        super(CommentLike.class, forVariable(variable));
     }
 
-    public QCommentLikeEntity(Path<? extends CommentLikeEntity> path) {
+    public QCommentLike(Path<? extends CommentLike> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QCommentLikeEntity(PathMetadata metadata) {
-        super(CommentLikeEntity.class, metadata);
+    public QCommentLike(PathMetadata metadata) {
+        super(CommentLike.class, metadata);
     }
 
 }
