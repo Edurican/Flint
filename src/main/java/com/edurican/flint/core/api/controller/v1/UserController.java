@@ -58,9 +58,10 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "테스트 완료", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
     })
-    public ApiResult<UserProfileResponse> getUserProfile(@PathVariable String username) {
-        UserProfileResponse userProfile = userService.getUserProfileByUsername(username);
-        return ApiResult.success(userProfile);
+    public ApiResult<UserProfileResponse> getUserProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable String username) {
+        return ApiResult.success(userService.getUserProfileByUsername(username, userDetails.getUser().getId()));
     }
 
     @PutMapping("/api/v1/users/me")

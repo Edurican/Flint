@@ -18,9 +18,6 @@ public class User extends BaseSoftEntity {
     @Version
     private Long version;
 
-    @Column(name = "name")
-    private String name;
-
     @Column(name = "username", unique = true)
     private String username;
 

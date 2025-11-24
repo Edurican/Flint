@@ -66,10 +66,10 @@ public class FollowController {
     })
     public ApiResult<CursorResponse<FollowResponse>> searchFollow(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "username", required = false) String username,
             @Valid @ModelAttribute CursorRequest cursor
     ) {
-        return ApiResult.success(followService.searchFollow(userDetails.getUser(), keyword, cursor));
+        return ApiResult.success(followService.searchFollow(userDetails.getUser(), username, cursor));
     }
 
     @PostMapping("/api/v1/{userId}/follow")

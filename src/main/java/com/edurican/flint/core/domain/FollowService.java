@@ -44,7 +44,11 @@ public class FollowService {
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(followers);
+        return new CursorResponse<>(
+                followers.getContents(),
+                followers.getLastFetchedId(),
+                followers.getHasNext()
+        );
     }
 
     /**
@@ -64,13 +68,17 @@ public class FollowService {
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(following);
+        return new CursorResponse<>(
+                following.getContents(),
+                following.getLastFetchedId(),
+                following.getHasNext()
+        );
     }
 
     /**
      *  팔로우 검색 (최신순)
      */
-    public CursorResponse<FollowResponse> searchFollow(User user, String keyword, CursorRequest cursor) {
+    public CursorResponse<FollowResponse> searchFollow(User user, String username, CursorRequest cursor) {
 
         // 유저 조회
         if(!userRepository.existsById(user.getId())) {
@@ -80,12 +88,16 @@ public class FollowService {
         // 유저 검색
         Cursor<FollowResponse> searchUsers = followRepository.searchUsers(
                 user.getId(),
-                keyword,
+                username,
                 cursor.getLastFetchedId(),
                 cursor.getLimit()
         );
 
-        return CursorResponse.of(searchUsers);
+        return new CursorResponse<>(
+                searchUsers.getContents(),
+                searchUsers.getLastFetchedId(),
+                searchUsers.getHasNext()
+        );
     }
 
     /**
