@@ -9,6 +9,7 @@ import com.edurican.flint.core.support.request.CursorRequest;
 import com.edurican.flint.core.support.response.CursorResponse;
 import com.edurican.flint.storage.*;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.validation.constraints.Max;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -101,45 +102,64 @@ public class FollowService {
     }
 
     /**
-     * 유저 팔로우
+     *  유저 팔로우
      */
     @Transactional
-    @Retryable(
-            retryFor = OptimisticLockException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 100)
-    )
     public void follow(Long followerId, Long followingId) {
+
+        // User Id가 낮은 순으로 락 잠금
+        Long firstId = Math.min(followerId, followingId);
+        Long secondId = Math.max(followerId, followingId);
+
+        User firstUser = userRepository.findByIdWithLock(firstId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+
+        User secondUser = userRepository.findByIdWithLock(secondId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         // 자기 자신을 팔로우 할 수 없음
         if (followerId.equals(followingId)) {
             throw new CoreException(ErrorType.SELF_FOLLOW_NOT_ALLOWED);
         }
 
+        // 이미 팔로우 했는지 확인
+        if(followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
+            throw new CoreException(ErrorType.FOLLOW_IS_ALREADY);
+        }
+
         // 유저 팔로우 또는 맞팔로우
         followRepository.save(new Follow(followerId, followingId));
 
         // 팔로워 유저 팔로잉 1 증가
-        User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-        follower.incrementFollowingCount();
+        if (followingId.equals(firstUser.getId())) {
+            firstUser.incrementFollowingCount();
+        } else {
+            secondUser.incrementFollowingCount();
+        }
 
         // 팔로잉 유저 팔로워 1 증가
-        User following = userRepository.findById(followingId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-        following.incrementFollowersCount();
+        if (followerId.equals(firstUser.getId())) {
+            firstUser.incrementFollowersCount();
+        } else {
+            secondUser.incrementFollowersCount();
+        }
     }
 
     /**
      * 유저 언팔로우
      */
     @Transactional
-    @Retryable(
-            retryFor = OptimisticLockException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 100)
-    )
     public void unfollow(Long followerId, Long followingId) {
+
+        // User Id가 낮은 순으로 락 잠금
+        Long firstId = Math.min(followerId, followingId);
+        Long secondId = Math.max(followerId, followingId);
+
+        User firstUser = userRepository.findByIdWithLock(firstId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
+
+        User secondUser = userRepository.findByIdWithLock(secondId)
+                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
         // 자기 자신을 언팔로우 할 수 없음
         if (followerId.equals(followingId)) {
@@ -153,13 +173,17 @@ public class FollowService {
         }
 
         // 팔로워 유저 팔로잉 1 감소
-        User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-        follower.decrementFollowingCount();
+        if (followingId.equals(firstUser.getId())) {
+            firstUser.decrementFollowingCount();
+        } else {
+            secondUser.decrementFollowingCount();
+        }
 
         // 팔로잉 유저 팔로워 1 감소
-        User following = userRepository.findById(followingId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
-        following.decrementFollowersCount();
+        if (followerId.equals(firstUser.getId())) {
+            firstUser.decrementFollowersCount();
+        } else {
+            secondUser.decrementFollowersCount();
+        }
     }
 }
