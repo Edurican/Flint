@@ -17,6 +17,8 @@ public class ExceptionController {
 
     @ExceptionHandler(CoreException.class)
     public ResponseEntity<ApiResult<?>> handleCoreException(CoreException e) {
+        // 테스트용 로그 sout
+        System.out.println("CoreException 상태코드 예정: " + e.getErrorType().getStatus());
         switch (e.getErrorType().getLogLevel()) {
             case ERROR -> log.error("CoreException : {}", e.getMessage(), e);
             case WARN -> log.warn("CoreException : {}", e.getMessage(), e);
@@ -33,6 +35,8 @@ public class ExceptionController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResult<?>> handleException(Exception e) {
+        // 테스트용 로그 sout
+        System.out.println(" Exception 핸들러 실행됨");
         log.error("Exception : {}", e.getMessage(), e);
         return new ResponseEntity<>(ApiResult.error(ErrorType.DEFAULT_ERROR), ErrorType.DEFAULT_ERROR.getStatus());
     }
