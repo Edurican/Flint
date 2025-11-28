@@ -9,7 +9,6 @@ import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.core.support.response.ApiResult;
 import com.edurican.flint.core.support.response.CursorResponse;
-import com.edurican.flint.storage.PostEntity;
 import com.edurican.flint.storage.PostRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -77,8 +76,8 @@ public class PostController
     @GetMapping("/api/v1/posts/{postId}")
     @Operation(summary = "특정 스파크 조회", description = "특정 스파크(게시물) 조회")
     public ApiResult<PostResponse> getPost(@PathVariable Long postId) {
-        Post post = postService.getPostsById(postId);
-        return ApiResult.success(PostResponse.from(post));
+        PostResponse postResponse = postService.getPostsById(postId);
+        return ApiResult.success(postResponse);
     }
 
     @GetMapping("/api/v1/posts/topic/{topicId}")
@@ -90,9 +89,9 @@ public class PostController
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
     )
     {
-        Cursor<Post> posts = this.postService.getPostsByTopic(topicId, lastFetchedId, limit);
+        Cursor<PostResponse> posts = this.postService.getPostsByTopic(topicId, lastFetchedId, limit);
 
-        List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
+        List<PostResponse> response = posts.getContents().stream().toList();
         return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
 
@@ -112,8 +111,8 @@ public class PostController
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
     )
     {
-        Cursor<Post> posts = this.postService.getAll(userDetails.getUser().getId(), lastFetchedId, limit);
-        List<PostResponse> response = posts.getContents().stream().map(PostResponse::from).toList();
+        Cursor<PostResponse> posts = this.postService.getAll(userDetails.getUser().getId(), lastFetchedId, limit);
+        List<PostResponse> response = posts.getContents().stream().toList();
         return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
     }
 
@@ -143,16 +142,16 @@ public class PostController
     public ApiResult<List<PostResponse>> getPostsByUsername(@PathVariable String username) {
 
         // 게시글 작성자 전달(카운트 기능)
-        List<Post> posts = this.postService.getPostsByUsername(username);
-        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
+        List<PostResponse> responses = this.postService.getPostsByUsername(username);
+        return ApiResult.success(responses.stream().toList());
 
     }
 
     @GetMapping("/api/v1/posts/trending")
     @Operation(summary = "핫 게시물", description = "7일 이내, 3시간 마다 핫게시물 갱신")
     public ApiResult<List<PostResponse>> hotPosts() {
-        List<Post> posts = postService.getHotPosts();
-        return ApiResult.success(posts.stream().map(PostResponse::from).toList());
+        List<PostResponse> responses = postService.getHotPosts();
+        return ApiResult.success(responses.stream().toList());
     }
 
 }

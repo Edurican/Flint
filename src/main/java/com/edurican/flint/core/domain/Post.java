@@ -1,65 +1,68 @@
 package com.edurican.flint.core.domain;
 
-import com.edurican.flint.storage.PostEntity;
+import com.edurican.flint.storage.BaseSoftEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 
+@Entity
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Post {
-    private Long id;
-    private String content;
-    private Long userId;
-    private String userName;
-    private Long topicId;
-    private String topicName;
-    private Integer viewCount;
-    private Integer commentCount;
-    private Integer likeCount;
-    private Integer resparkCount;
-    private String status;
-    private LocalDateTime updatedAt;
-    private LocalDateTime createdAt;
+@Table(name = "posts",
+        indexes = { @Index(name = "idx_posts_user_id", columnList = "user_id"),
+                @Index(name = "idx_posts_topic_id", columnList = "topic_id") })
+public class Post extends BaseSoftEntity {
 
-    public static Post of(PostEntity postEntity) {
-        return Post.builder()
-                .id(postEntity.getId())
-                .content(postEntity.getContent())
-                .userId(postEntity.getUserId())
-                .topicId(postEntity.getTopicId())
-                .viewCount(postEntity.getViewCount())
-                .commentCount(postEntity.getCommentCount())
-                .likeCount(postEntity.getLikeCount())
-                .resparkCount(postEntity.getResparkCount())
-                .status(postEntity.getStatus().name())
-                .updatedAt(postEntity.getUpdatedAt())
-                .createdAt(postEntity.getCreatedAt())
-                .build();
+    @Column(name = "content", length = 100, nullable = false)
+    private String content;
+
+    @Column(name = "user_id", nullable = false )
+    private Long userId;
+
+    @Column(name = "topic_id", nullable=false )
+    private Long topicId;
+
+    @Column(name = "comment_count", nullable=false)
+    private Integer commentCount;
+
+    @Column(name = "view_count", nullable=false)
+    private Integer viewCount;
+
+    @Column(name = "like_count", nullable=false)
+    private Integer likeCount;
+
+    @Column(name = "respark_count", nullable=false)
+    private Integer resparkCount;
+
+    public void createPost(Long userId, String content, Long topicId) {
+        this.userId = userId;
+        this.content = content;
+        this.topicId = topicId;
     }
-    public static Post of(PostEntity postEntity,String userName, String topicName) {
-        return Post.builder()
-                .id(postEntity.getId())
-                .content(postEntity.getContent())
-                .userId(postEntity.getUserId())
-                .userName(userName)
-                .topicId(postEntity.getTopicId())
-                .topicName(topicName)
-                .viewCount(postEntity.getViewCount())
-                .commentCount(postEntity.getCommentCount())
-                .likeCount(postEntity.getLikeCount())
-                .resparkCount(postEntity.getResparkCount())
-                .status(postEntity.getStatus().name())
-                .updatedAt(postEntity.getUpdatedAt())
-                .createdAt(postEntity.getCreatedAt())
-                .build();
+
+    public void modifyPost(String content, Long topicId) {
+        this.content = content;
+        this.topicId = topicId;
     }
+    public void increaseViewCont()
+    {
+        this.viewCount = this.viewCount + 1;
+    }
+
+
+    @PrePersist
+    public void postDefault() {
+        if (commentCount == null) commentCount = 0;
+        if (viewCount == null) viewCount = 0;
+        if (likeCount == null) likeCount = 0;
+        if (resparkCount == null) resparkCount = 0;
+        if (getStatus() == null) active();
+    }
+
 
 }
 

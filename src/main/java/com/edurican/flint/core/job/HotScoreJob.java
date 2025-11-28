@@ -16,7 +16,7 @@ public class HotScoreJob {
     private final JdbcTemplate jdbcTemplate;
 
     //확인 상 1분마다 바꿈
-    @Scheduled(cron =  "0 0/1 * * * ?")
+    @Scheduled(cron =  "0 0 0/3 * * ?")
     public void calculateHotScore() {
         jdbcTemplate.update("DELETE FROM hot_posts");
         jdbcTemplate.update("ALTER TABLE hot_posts AUTO_INCREMENT = 1");

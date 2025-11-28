@@ -19,17 +19,19 @@ public class PostResponse {
     private Integer likeCount;
     private LocalDateTime createdAt;
 
-    public static PostResponse from(Post post) {
+
+    public static PostResponse from(Post post, String username, String topicName) {
         return PostResponse.builder()
                 .id(post.getId())
                 .userId(post.getUserId())
                 .content(post.getContent())
-                .username(post.getUserName())
-                .topicName(post.getTopicName())
+                .username(username)
+                .topicName(topicName)
                 .viewCount(post.getViewCount())
                 .commentCount(post.getCommentCount())
                 .likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt())
                 .build();
     }
+
 }
