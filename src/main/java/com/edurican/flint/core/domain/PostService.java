@@ -1,5 +1,6 @@
 package com.edurican.flint.core.domain;
 
+import com.edurican.flint.core.api.controller.v1.response.PostResponse;
 import com.edurican.flint.core.enums.EntityStatus;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.error.CoreException;
@@ -40,7 +41,7 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        PostEntity post = new PostEntity();
+        Post post = new Post();
         post.createPost(userId, content, topicId);
 
         this.postRepository.save(post);
@@ -49,7 +50,7 @@ public class PostService {
 
     @Transactional
     public boolean update(Long postId, Long userId, String content, Long topicId) {
-        PostEntity post = this.postRepository.findById(postId).orElseThrow();
+        Post post = this.postRepository.findById(postId).orElseThrow();
 
         if (!post.getUserId().equals(userId))
         {
@@ -66,7 +67,7 @@ public class PostService {
 
     @Transactional
     public boolean delete(Long postId, Long userId) {
-        PostEntity post = this.postRepository.findById(postId).orElseThrow();
+        Post post = this.postRepository.findById(postId).orElseThrow();
 
         if (!post.getUserId().equals(userId))
         {
@@ -81,7 +82,7 @@ public class PostService {
 
     //전체 게시물
     @Transactional(readOnly = true)
-    public Cursor<Post> getAll(Long userId, Long lastFetchedId, Integer limit) {
+    public Cursor<PostResponse> getAll(Long userId, Long lastFetchedId, Integer limit) {
 
         return postFeed.getRecommendFeed(userId, lastFetchedId, limit);
 
@@ -89,60 +90,54 @@ public class PostService {
 
     //단건 조회
     @Transactional
-    public Post getPostsById(Long postId) {
-        PostEntity post =  this.postRepository.findById(postId).orElseThrow();
+    public PostResponse getPostsById(Long postId) {
+        Post post =  this.postRepository.findById(postId).orElseThrow();
 
         post.increaseViewCont();
         postRepository.save(post);
 
         User userE = this.userRepository.findById(post.getUserId()).orElse(null);
-        TopicEntity topicE = this.topicRepository.findById(post.getTopicId()).orElse(null);
+        Topic topicE = this.topicRepository.findById(post.getTopicId()).orElse(null);
 
         String username = userE.getUsername();
         String topicName = topicE.getTopicName();
 
-        return Post.of(post,username,topicName);
+        return PostResponse.from(post,username,topicName);
     }
 
     //특정 유저의 게시물
+    // 특정 유저의 게시물
     @Transactional(readOnly = true)
-    public List<Post> getPostsByUserId(Long userId) {
-        if (this.userRepository.findById(userId).isEmpty())
-        {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
-        }
+    public List<PostResponse> getPostsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        List<PostEntity> posts = postRepository.findByUserIdOrderByIdDesc(userId);
+        List<Post> posts = postRepository.findByUserIdOrderByIdDesc(userId);
         if (posts.isEmpty()) return List.of();
 
-        // 유저 아이디, 토픽 아이디 분리
-        List<Long> userIds = posts.stream().map(PostEntity::getUserId).distinct().toList();
-        List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
-
-        //유저 아이디의 유저 정보 얻기
-        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, Function.identity()));
-
-        //토픽 아이디의 토픽 정보 얻기
-        Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
-                .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
-
-        // 도메인 변환 (add username/topicName)
-        return posts.stream()
-                .map(postE -> {
-                    User userE = userMap.get(postE.getUserId());
-                    TopicEntity topicE = topicMap.get(postE.getTopicId());
-                    String username = (userE != null) ? userE.getUsername() : "";
-                    String topicName = (topicE != null) ? topicE.getTopicName() : "";
-                    return Post.of(postE, username, topicName);
-                })
+        List<Long> topicIds = posts.stream()
+                .map(Post::getTopicId)
+                .distinct()
                 .toList();
 
+        Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
+                .collect(Collectors.toMap(Topic::getId, Function.identity()));
+
+        return posts.stream()
+                .map(post -> {
+                    String username = user.getUsername();  // 어차피 같은 유저
+                    String topicName = Optional.ofNullable(topicMap.get(post.getTopicId()))
+                            .map(Topic::getTopicName)
+                            .orElse("");
+                    return PostResponse.from(post, username, topicName);
+                })
+                .toList();
     }
+
 
     //특정 토픽의 게시물
     @Transactional(readOnly = true)
-    public Cursor<Post> getPostsByTopic(Long topicId, Long lastFetchedId, Integer limit) {
+    public Cursor<PostResponse> getPostsByTopic(Long topicId, Long lastFetchedId, Integer limit) {
         return postFeed.getTopicFeed(topicId, lastFetchedId, limit);
     }
 
@@ -150,7 +145,7 @@ public class PostService {
     @Transactional
     public void likePost(Long userId, Long postId) {
         // 댓글 존재 확인
-        PostEntity post = this.postRepository.findById(postId).orElseThrow();
+        Post post = this.postRepository.findById(postId).orElseThrow();
 
         // 이미 좋아요한 경우 -> 좋아요 취소
         if (postLikeRepository.existsByUserIdAndPostId(userId, postId)) {
@@ -165,7 +160,7 @@ public class PostService {
 
         // 좋아요 추가
         try {
-            postLikeRepository.save(new PostLikeEntity(userId, postId));
+            postLikeRepository.save(new PostLike(userId, postId));
             postRepository.incrementLikeCount(postId);
 
         } catch (Exception e) {
@@ -174,7 +169,7 @@ public class PostService {
     }
 
     // 게시물 중 username을 가져와 그 사용자의 Id를 전달
-    public List<Post> getPostsByUsername(String username) {
+    public List<PostResponse> getPostsByUsername(String username) {
         User user = userRepository.findByUsername(username).
                 orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
@@ -189,37 +184,38 @@ public class PostService {
 
     //핫 게시물
     @Transactional(readOnly = true)
-    public List<Post> getHotPosts() {
+    public List<PostResponse> getHotPosts() {
         List<Long> hotId = hotPostRepository.findHotPosts();
         if (hotId.isEmpty()) return List.of();
 
-        List<PostEntity> posts = postRepository.findAllById(hotId);
+        List<Post> posts = postRepository.findAllById(hotId);
         if (posts.isEmpty()) return List.of();
 
-        Map<Long, PostEntity> postMap = posts.stream()
-                .collect(Collectors.toMap(PostEntity::getId, Function.identity()));
+        Map<Long, Post> postMap = posts.stream()
+                .collect(Collectors.toMap(Post::getId, Function.identity()));
 
-        List<Long> userIds  = posts.stream().map(PostEntity::getUserId).distinct().toList();
-        List<Long> topicIds = posts.stream().map(PostEntity::getTopicId).distinct().toList();
+        List<Long> userIds  = posts.stream().map(Post::getUserId).distinct().toList();
+        List<Long> topicIds = posts.stream().map(Post::getTopicId).distinct().toList();
 
         Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
-                .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
+        Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
+                .collect(Collectors.toMap(Topic::getId, Function.identity()));
 
         return hotId.stream()
                 .map(postMap::get)
                 .filter(Objects::nonNull)
-                .map(postE -> {
-                    String username  = Optional.ofNullable(userMap.get(postE.getUserId()))
+                .map(post -> {
+                    String username  = Optional.ofNullable(userMap.get(post.getUserId()))
                             .map(User::getUsername).orElse("");
-                    String topicName = Optional.ofNullable(topicMap.get(postE.getTopicId()))
-                            .map(TopicEntity::getTopicName).orElse("");
-                    return Post.of(postE, username, topicName);
+
+                    String topicName = Optional.ofNullable(topicMap.get(post.getTopicId()))
+                            .map(Topic::getTopicName).orElse("");
+
+                    return PostResponse.from(post, username, topicName);
                 })
                 .toList();
-
     }
 
 }
