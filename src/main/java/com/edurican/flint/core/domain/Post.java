@@ -63,6 +63,21 @@ public class Post extends BaseSoftEntity {
         if (getStatus() == null) active();
     }
 
+    //
+
+    public void increaseCommentCount() {
+        if (commentCount == null) commentCount = 0;
+        commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        if (commentCount == null || commentCount == 0) {
+            commentCount = 0;
+        } else {
+            commentCount--;
+        }
+    }
+
 
 }
 
