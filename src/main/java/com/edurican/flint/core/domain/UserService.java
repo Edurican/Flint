@@ -24,13 +24,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PostService postService;
+    private final ImageFileService imageFileService;
 
-    public UserService(UserRepository userRepository, FollowRepository followRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PostService postService) {
+    public UserService(UserRepository userRepository, FollowRepository followRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PostService postService, ImageFileService imageFileService) {
         this.userRepository = userRepository;
         this.followRepository = followRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.postService = postService;
+        this.imageFileService = imageFileService;
     }
 
     /* 회원가입 서비스 */
@@ -73,7 +75,7 @@ public class UserService {
         System.out.println("🔹 DB 비밀번호: " + user.getPassword());
         System.out.println("🔹 입력 비밀번호 일치? " + passwordEncoder.matches(password, user.getPassword()));
 
-        return new LoginResponseDto(token, user.getUsername());
+        return new LoginResponseDto(token, user.getUsername(), user.getProfileImageUrl());
 
     }
 
@@ -120,5 +122,29 @@ public class UserService {
 
 //        user.updateProfile(newUsername, newBio);
         return newToken;
+    }
+
+    /* 프로필 사진 경로 변경 메소드 */
+    @Transactional
+    public String updateProfileImage(UserDetailsImpl userDetails, String filePath) {
+        Long userId = userDetails.getUser().getId();
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CoreException(ErrorType.USER_NOT_FOUND)
+        );
+
+        user.updateProfileImageUrl(filePath);
+
+        return filePath;
+    }
+
+    /* 프로필 사진 경로 초기화 메소드 (기본 이미지로 변경) */
+    @Transactional
+    public void deleteProfileImage(UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUser().getId();
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CoreException(ErrorType.USER_NOT_FOUND)
+        );
+
+        user.deleteProfileImageUrl();
     }
 }

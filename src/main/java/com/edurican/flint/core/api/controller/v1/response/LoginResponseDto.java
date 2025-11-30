@@ -6,9 +6,11 @@ import lombok.Getter;
 public class LoginResponseDto {
     private String token;
     private String username;
+    private String profileImage;
 
-    public LoginResponseDto(String token, String username) {
+    public LoginResponseDto(String token, String username, String profileImage) {
         this.token = token;
         this.username = username;
+        this.profileImage = profileImage;
     }
 }

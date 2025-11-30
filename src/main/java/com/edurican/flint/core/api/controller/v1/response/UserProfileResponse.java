@@ -13,6 +13,7 @@ public class UserProfileResponse {
     private Integer followingCount;
     private Long postCount;
     private Boolean isFollowing;
+    private String profileImage;
 
     public UserProfileResponse(User user, Long postCount, Boolean isFollowing) {
         this.id = user.getId();
@@ -22,5 +23,6 @@ public class UserProfileResponse {
         this.followingCount = user.getFollowingCount();
         this.postCount = postCount;
         this.isFollowing = isFollowing;
+        this.profileImage = user.getProfileImageUrl();
     }
 }
