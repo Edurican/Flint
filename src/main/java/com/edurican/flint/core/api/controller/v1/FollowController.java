@@ -1,34 +1,25 @@
 package com.edurican.flint.core.api.controller.v1;
 
 import com.edurican.flint.core.api.controller.v1.response.FollowResponse;
-import com.edurican.flint.core.support.request.CursorRequest;
-import com.edurican.flint.core.domain.Follow;
 import com.edurican.flint.core.domain.FollowService;
-import com.edurican.flint.core.domain.User;
-import com.edurican.flint.core.support.Cursor;
+import com.edurican.flint.core.support.request.CursorRequest;
 import com.edurican.flint.core.support.request.UserDetailsImpl;
 import com.edurican.flint.core.support.response.ApiResult;
 import com.edurican.flint.core.support.response.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@Tag(name = "팔로우", description = "팔로우 API")
 @RestController
+@RequiredArgsConstructor
 public class FollowController {
-
     private final FollowService followService;
-
-    @Autowired
-    public FollowController(FollowService followService) {
-        this.followService = followService;
-    }
 
     @GetMapping("/api/v1/{username}/followers")
     @Operation(summary = "팔로워 불러오기", description = "특정 유저 팔로워 불러오기")
@@ -77,7 +68,8 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로우 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
+            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "이미 팔로우한 사용자입니다.")
     })
     public ApiResult<?> follow(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -92,7 +84,8 @@ public class FollowController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "언팔로우 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
+            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "팔로우하지 않은 사용자입니다.")
     })
     public ApiResult<?> unfollow(
             @AuthenticationPrincipal UserDetailsImpl userDetails,

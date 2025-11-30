@@ -25,14 +25,16 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final PostRepository postRepository;
 
     @Autowired
     public CommentService(CommentRepository commentRepository,
                           UserRepository userRepository,
-                          CommentLikeRepository commentLikeRepository) {
+                          CommentLikeRepository commentLikeRepository, PostRepository postRepository) {
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.commentLikeRepository = commentLikeRepository;
+        this.postRepository = postRepository;
     }
 
     /**
@@ -69,6 +71,8 @@ public class CommentService {
         // 댓글 생성, 저장
         Comment comment = new Comment(userId, postId, parentCommentId, username, depth, request.getContent());
         Comment saved = commentRepository.save(comment);
+
+        postRepository.incrementCommentCount(postId);
 
         return new CommentResponse(
                 saved.getId(),
@@ -133,6 +137,9 @@ public class CommentService {
         }
         // Soft Delete
         comment.deleted();
+
+        Long postId = comment.getPostId();
+        postRepository.decrementCommentCount(postId);
     }
 
     /**

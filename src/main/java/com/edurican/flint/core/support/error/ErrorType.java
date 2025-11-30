@@ -16,9 +16,9 @@ public enum ErrorType {
     USER_DUPLICATE_EMAIL(HttpStatus.CONFLICT, ErrorCode.U2000, "Email is already taken.", LogLevel.WARN),
 
     // Follow
-    FOLLOW_IS_ALREADY(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.F5000, "An unexpected error has occurred.", LogLevel.WARN),
-    SELF_FOLLOW_NOT_ALLOWED (HttpStatus.BAD_REQUEST, ErrorCode.F5000, "Self-follow is not allowed.", LogLevel.WARN),
-    NOT_FOLLOWING(HttpStatus.BAD_REQUEST, ErrorCode.F5000, "Not following.", LogLevel.WARN),
+    CANNOT_FOLLOW_SELF (HttpStatus.BAD_REQUEST, ErrorCode.CANNOT_FOLLOW_SELF, "자기 자신을 팔로우할 수 없습니다.", LogLevel.WARN),
+    ALREADY_FOLLOWING(HttpStatus.CONFLICT, ErrorCode.ALREADY_FOLLOWING, "이미 팔로우한 사용자입니다.", LogLevel.WARN),
+    NOT_FOLLOWING(HttpStatus.CONFLICT, ErrorCode.NOT_FOLLOWING, "팔로우하지 않은 사용자입니다.", LogLevel.WARN),
 
     // Comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Comment not found.", LogLevel.ERROR),

@@ -1,5 +1,6 @@
 package com.edurican.flint.core.domain;
 
+import com.edurican.flint.core.api.controller.v1.response.PostResponse;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.storage.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class PostFeed {
         this.topicRepository = topicRepository;
     }
 
-    public Cursor<Post> getRecommendFeed(Long userId, Long lastFetchedId, Integer limit) {
+    public Cursor<PostResponse> getRecommendFeed(Long userId, Long lastFetchedId, Integer limit) {
 
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
 
@@ -36,25 +37,25 @@ public class PostFeed {
         double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
         if(userTopics.isEmpty() || userTopics.size() < 3 || totalScore < 20.0) {    // 임시 (데이터가 쌓이지 않았다면)
 
-            Slice<PostEntity> postEntities = postRepository.findByWithCursor(cursor, limit);
-            List<PostEntity> postEntityList = postEntities.getContent();
+            Slice<Post> postEntities = postRepository.findByWithCursor(cursor, limit);
+            List<Post> postEntityList = postEntities.getContent();
             
             // username과 topicName 매핑
-            List<Long> userIds = postEntityList.stream().map(PostEntity::getUserId).distinct().toList();
-            List<Long> topicIds = postEntityList.stream().map(PostEntity::getTopicId).distinct().toList();
+            List<Long> userIds = postEntityList.stream().map(Post::getUserId).distinct().toList();
+            List<Long> topicIds = postEntityList.stream().map(Post::getTopicId).distinct().toList();
             
             Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
                     .collect(Collectors.toMap(User::getId, Function.identity()));
-            Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
-                    .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
+            Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
+                    .collect(Collectors.toMap(Topic::getId, Function.identity()));
             
-            List<Post> posts = postEntityList.stream()
-                    .map(postE -> {
-                        User userE = userMap.get(postE.getUserId());
-                        TopicEntity topicE = topicMap.get(postE.getTopicId());
-                        String username = (userE != null) ? userE.getUsername() : "";
-                        String topicName = (topicE != null) ? topicE.getTopicName() : "";
-                        return Post.of(postE, username, topicName);
+            List<PostResponse> posts = postEntityList.stream()
+                    .map(post -> {
+                        User user = userMap.get(post.getUserId());
+                        Topic topic = topicMap.get(post.getTopicId());
+                        String username = (user != null) ? user.getUsername() : "";
+                        String topicName = (topic != null) ? topic.getTopicName() : "";
+                        return PostResponse.from(post, username, topicName);
                     })
                     .toList();
 
@@ -77,9 +78,9 @@ public class PostFeed {
             }
         }
 
-        List<Post> posts = topicCounts.entrySet().stream()
+        List<PostResponse> posts = topicCounts.entrySet().stream()
                 .flatMap(entry -> getTopicFeed(entry.getKey(), cursor, entry.getValue()).getContents().stream())
-                .sorted(Comparator.comparing(Post::getId).reversed())
+                .sorted(Comparator.comparing(PostResponse::getId).reversed())
                 .limit(limit)
                 .toList();
 
@@ -88,28 +89,28 @@ public class PostFeed {
         return new Cursor<>(posts, nextCursor, hasNext);
     }
 
-    public Cursor<Post> getTopicFeed(Long topicId, Long lastFetchedId, Integer limit) {
+    public Cursor<PostResponse> getTopicFeed(Long topicId, Long lastFetchedId, Integer limit) {
         Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
 
-        Slice<PostEntity> postEntities = postRepository.findByTopicIdWithCursor(topicId, cursor, limit);
-        List<PostEntity> postEntityList = postEntities.getContent();
+        Slice<Post> postEntities = postRepository.findByTopicIdWithCursor(topicId, cursor, limit);
+        List<Post> postEntityList = postEntities.getContent();
         
         // username과 topicName 매핑
-        List<Long> userIds = postEntityList.stream().map(PostEntity::getUserId).distinct().toList();
-        List<Long> topicIds = postEntityList.stream().map(PostEntity::getTopicId).distinct().toList();
+        List<Long> userIds = postEntityList.stream().map(Post::getUserId).distinct().toList();
+        List<Long> topicIds = postEntityList.stream().map(Post::getTopicId).distinct().toList();
         
         Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
-        Map<Long, TopicEntity> topicMap = topicRepository.findAllById(topicIds).stream()
-                .collect(Collectors.toMap(TopicEntity::getId, Function.identity()));
+        Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
+                .collect(Collectors.toMap(Topic::getId, Function.identity()));
         
-        List<Post> posts = postEntityList.stream()
+        List<PostResponse> posts = postEntityList.stream()
                 .map(postE -> {
                     User userE = userMap.get(postE.getUserId());
-                    TopicEntity topicE = topicMap.get(postE.getTopicId());
+                    Topic topicE = topicMap.get(postE.getTopicId());
                     String username = (userE != null) ? userE.getUsername() : "";
                     String topicName = (topicE != null) ? topicE.getTopicName() : "";
-                    return Post.of(postE, username, topicName);
+                    return PostResponse.from(postE, username, topicName);
                 })
                 .toList();
 

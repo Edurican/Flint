@@ -7,26 +7,17 @@ import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.core.support.request.CursorRequest;
 import com.edurican.flint.core.support.response.CursorResponse;
-import com.edurican.flint.storage.*;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.validation.constraints.Max;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import com.edurican.flint.storage.FollowRepository;
+import com.edurican.flint.storage.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class FollowService {
-
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
-
-    @Autowired
-    public FollowService(UserRepository userRepository, FollowRepository followRepository) {
-        this.userRepository = userRepository;
-        this.followRepository = followRepository;
-    }
 
     /**
      * 유저의 follower 얻기
@@ -41,8 +32,8 @@ public class FollowService {
         // 유저 팔로워 조회
         Cursor<FollowResponse> followers = followRepository.findFollowersByUserId(
                 user.getId(),
-                cursor.getLastFetchedId(),
-                cursor.getLimit()
+                cursor.lastFetchedId(),
+                cursor.limit()
         );
 
         return new CursorResponse<>(
@@ -65,8 +56,8 @@ public class FollowService {
         // 유저 팔로잉 조회
         Cursor<FollowResponse> following = followRepository.findFollowingsByUserId(
                 user.getId(),
-                cursor.getLastFetchedId(),
-                cursor.getLimit()
+                cursor.lastFetchedId(),
+                cursor.limit()
         );
 
         return new CursorResponse<>(
@@ -90,8 +81,8 @@ public class FollowService {
         Cursor<FollowResponse> searchUsers = followRepository.searchUsers(
                 user.getId(),
                 username,
-                cursor.getLastFetchedId(),
-                cursor.getLimit()
+                cursor.lastFetchedId(),
+                cursor.limit()
         );
 
         return new CursorResponse<>(
@@ -106,6 +97,10 @@ public class FollowService {
      */
     @Transactional
     public void follow(Long followerId, Long followingId) {
+        // 자기 자신을 팔로우 할 수 없음
+        if (followerId.equals(followingId)) {
+            throw new CoreException(ErrorType.CANNOT_FOLLOW_SELF);
+        }
 
         // User Id가 낮은 순으로 락 잠금
         Long firstId = Math.min(followerId, followingId);
@@ -117,14 +112,10 @@ public class FollowService {
         User secondUser = userRepository.findByIdWithLock(secondId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        // 자기 자신을 팔로우 할 수 없음
-        if (followerId.equals(followingId)) {
-            throw new CoreException(ErrorType.SELF_FOLLOW_NOT_ALLOWED);
-        }
 
         // 이미 팔로우 했는지 확인
         if(followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
-            throw new CoreException(ErrorType.FOLLOW_IS_ALREADY);
+            throw new CoreException(ErrorType.ALREADY_FOLLOWING);
         }
 
         // 유저 팔로우 또는 맞팔로우
@@ -151,6 +142,11 @@ public class FollowService {
     @Transactional
     public void unfollow(Long followerId, Long followingId) {
 
+        // 자기 자신을 언팔로우 할 수 없음
+        if (followerId.equals(followingId)) {
+            throw new CoreException(ErrorType.CANNOT_FOLLOW_SELF);
+        }
+
         // User Id가 낮은 순으로 락 잠금
         Long firstId = Math.min(followerId, followingId);
         Long secondId = Math.max(followerId, followingId);
@@ -161,10 +157,6 @@ public class FollowService {
         User secondUser = userRepository.findByIdWithLock(secondId)
                 .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
 
-        // 자기 자신을 언팔로우 할 수 없음
-        if (followerId.equals(followingId)) {
-            throw new CoreException(ErrorType.SELF_FOLLOW_NOT_ALLOWED);
-        }
 
         // 유저 언팔로우
         int deleteCount = followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
