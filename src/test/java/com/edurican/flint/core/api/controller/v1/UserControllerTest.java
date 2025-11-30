@@ -160,7 +160,7 @@ class UserControllerTest {
 
             String content = gson.toJson(loginRequestDto);
 
-            LoginResponseDto fakeResponse = new LoginResponseDto("fake-token", "fakeuser");
+            LoginResponseDto fakeResponse = new LoginResponseDto("fake-token", "fakeuser", "");
 
             given(userService.login(any(LoginRequestDto.class)))
                     .willReturn(fakeResponse);
