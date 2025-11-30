@@ -13,7 +13,9 @@ public enum ErrorCode {
     U2000,
 
     // Follow (5000)
-    F5000,
+    ALREADY_FOLLOWING,
+    CANNOT_FOLLOW_SELF,
+    NOT_FOLLOWING,
 
     // comment (6000)
     C6000,
