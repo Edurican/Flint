@@ -131,8 +131,8 @@ class FollowTests {
                     followerCounts.merge(followingId, 1, Integer::sum);
                     followingCounts.merge(followerId, 1, Integer::sum);
                 } catch (CoreException e) {
-                    if (!(e.getErrorType() == SELF_FOLLOW_NOT_ALLOWED) &&
-                            !(e.getErrorType() == FOLLOW_IS_ALREADY)) {
+                    if (!(e.getErrorType() == CANNOT_FOLLOW_SELF) &&
+                            !(e.getErrorType() == ALREADY_FOLLOWING)) {
                         System.out.println("FOLLOW: " + e.getMessage());
                     }
                 } finally {
@@ -183,7 +183,7 @@ class FollowTests {
                 try {
                     followService.unfollow(follow.getFollowerId(), follow.getFollowingId());
                 } catch (CoreException e) {
-                    if (!(e.getErrorType() == SELF_FOLLOW_NOT_ALLOWED) &&
+                    if (!(e.getErrorType() == CANNOT_FOLLOW_SELF) &&
                             !(e.getErrorType() == NOT_FOLLOWING)) {
                         System.out.println("UNFOLLOW: " + e.getMessage());
                     }
