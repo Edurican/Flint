@@ -42,6 +42,8 @@ public class QUser extends EntityPathBase<User> {
 
     public final NumberPath<Long> postCount = createNumber("postCount", Long.class);
 
+    public final StringPath profileImageUrl = createString("profileImageUrl");
+
     public final EnumPath<com.edurican.flint.core.enums.UserRoleEnum> role = createEnum("role", com.edurican.flint.core.enums.UserRoleEnum.class);
 
     //inherited
