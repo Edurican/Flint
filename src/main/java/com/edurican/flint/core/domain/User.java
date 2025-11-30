@@ -40,6 +40,9 @@ public class User extends BaseSoftEntity {
     @Column(name = "postcount")
     private Long postCount = 0L;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     public User(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;
@@ -86,6 +89,20 @@ public class User extends BaseSoftEntity {
             this.followingCount = 0;
         } else {
             this.followingCount--;
+        }
+    }
+
+    /* 프로필 이미지 변경 메소드 */
+    public void updateProfileImageUrl(String newProfileImageUrl) {
+        if (newProfileImageUrl != null) {
+            this.profileImageUrl = newProfileImageUrl;
+        }
+    }
+
+    /* 프로필 이미지 기본으로 변경(삭제) 메소드 */
+    public void deleteProfileImageUrl() {
+        if(this.profileImageUrl != null) {
+            this.profileImageUrl = null;
         }
     }
 }
