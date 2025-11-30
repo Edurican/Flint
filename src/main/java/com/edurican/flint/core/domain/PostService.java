@@ -5,7 +5,9 @@ import com.edurican.flint.core.enums.EntityStatus;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
+import com.edurican.flint.core.support.response.CursorResponse;
 import com.edurican.flint.storage.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,23 +20,15 @@ import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
-
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TopicRepository topicRepository;
+    private final UserTopicRepository userTopicRepository;
     private final PostFeed postFeed;
     private final PostLikeRepository postLikeRepository;
     private final HotPostRepository hotPostRepository;
-
-    public PostService(PostRepository postRepository, UserRepository userRepository, TopicRepository topicRepository, PostFeed postFeed, PostLikeRepository postLikeRepository, HotPostRepository hotPostRepository) {
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-        this.topicRepository = topicRepository;
-        this.postFeed = postFeed;
-        this.postLikeRepository = postLikeRepository;
-        this.hotPostRepository = hotPostRepository;
-    }
 
     @Transactional
     public boolean create(Long userId, String content, Long topicId) {
@@ -52,12 +46,11 @@ public class PostService {
     public boolean update(Long postId, Long userId, String content, Long topicId) {
         Post post = this.postRepository.findById(postId).orElseThrow();
 
-        if (!post.getUserId().equals(userId))
-        {
+        if (!post.getUserId().equals(userId)) {
             throw new IllegalStateException("수정 권한이 없습니다.");
         }
 
-        post.modifyPost(content,topicId);
+        post.modifyPost(content, topicId);
 
 
         postRepository.save(post);
@@ -69,8 +62,7 @@ public class PostService {
     public boolean delete(Long postId, Long userId) {
         Post post = this.postRepository.findById(postId).orElseThrow();
 
-        if (!post.getUserId().equals(userId))
-        {
+        if (!post.getUserId().equals(userId)) {
             throw new IllegalStateException("삭제 권한이 없습니다.");
         }
 
@@ -82,16 +74,21 @@ public class PostService {
 
     //전체 게시물
     @Transactional(readOnly = true)
-    public Cursor<PostResponse> getAll(Long userId, Long lastFetchedId, Integer limit) {
+    public CursorResponse<PostResponse> getAll(Long userId, Long lastFetchedId, Integer limit) {
 
-        return postFeed.getRecommendFeed(userId, lastFetchedId, limit);
+        Cursor<PostResponse> recommendFeed = postFeed.getRecommendFeed(userId, lastFetchedId, limit);
 
+        return new CursorResponse<>(
+                recommendFeed.getContents(),
+                recommendFeed.getLastFetchedId(),
+                recommendFeed.getHasNext()
+        );
     }
 
     //단건 조회
     @Transactional
     public PostResponse getPostsById(Long postId) {
-        Post post =  this.postRepository.findById(postId).orElseThrow();
+        Post post = this.postRepository.findById(postId).orElseThrow();
 
         post.increaseViewCont();
         postRepository.save(post);
@@ -102,7 +99,7 @@ public class PostService {
         String username = userE.getUsername();
         String topicName = topicE.getTopicName();
 
-        return PostResponse.from(post,username,topicName);
+        return PostResponse.from(post, username, topicName);
     }
 
     //특정 유저의 게시물
@@ -137,15 +134,26 @@ public class PostService {
 
     //특정 토픽의 게시물
     @Transactional(readOnly = true)
-    public Cursor<PostResponse> getPostsByTopic(Long topicId, Long lastFetchedId, Integer limit) {
-        return postFeed.getTopicFeed(topicId, lastFetchedId, limit);
+    public CursorResponse<PostResponse> getPostsByTopic(Long topicId, Long userId, Long lastFetchedId, Integer limit) {
+
+        Cursor<PostResponse> recommendFeed = postFeed.getTopicFeed(topicId, userId, lastFetchedId, limit);
+
+        return new CursorResponse<>(
+                recommendFeed.getContents(),
+                recommendFeed.getLastFetchedId(),
+                recommendFeed.getHasNext()
+        );
     }
 
     //좋아요
     @Transactional
     public void likePost(Long userId, Long postId) {
         // 댓글 존재 확인
-        Post post = this.postRepository.findById(postId).orElseThrow();
+        Post post = this.postRepository.findById(postId)
+                .orElseThrow(() -> new CoreException(ErrorType.DEFAULT_ERROR)); // POST_NOT_FOUND 에러 추가좀
+
+        UserTopic userTopic = userTopicRepository.findByUserIdAndTopicId(userId, post.getTopicId())
+                .orElseGet(() -> new UserTopic(userId, post.getTopicId()));
 
         // 이미 좋아요한 경우 -> 좋아요 취소
         if (postLikeRepository.existsByUserIdAndPostId(userId, postId)) {
@@ -155,17 +163,21 @@ public class PostService {
             }
             PostRepository postRepository = this.postRepository;
             postRepository.decrementLikeCount(postId);
+            userTopic.decreaseScore();
             return; // 좋아요 취소 후 종료
         }
 
         // 좋아요 추가
         try {
             postLikeRepository.save(new PostLike(userId, postId));
+            userTopic.increaseScore();
             postRepository.incrementLikeCount(postId);
 
         } catch (Exception e) {
             throw new CoreException(ErrorType.DEFAULT_ERROR);
         }
+
+        userTopicRepository.save(userTopic);
     }
 
     // 게시물 중 username을 가져와 그 사용자의 Id를 전달
@@ -194,7 +206,7 @@ public class PostService {
         Map<Long, Post> postMap = posts.stream()
                 .collect(Collectors.toMap(Post::getId, Function.identity()));
 
-        List<Long> userIds  = posts.stream().map(Post::getUserId).distinct().toList();
+        List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
         List<Long> topicIds = posts.stream().map(Post::getTopicId).distinct().toList();
 
         Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
@@ -207,7 +219,7 @@ public class PostService {
                 .map(postMap::get)
                 .filter(Objects::nonNull)
                 .map(post -> {
-                    String username  = Optional.ofNullable(userMap.get(post.getUserId()))
+                    String username = Optional.ofNullable(userMap.get(post.getUserId()))
                             .map(User::getUsername).orElse("");
 
                     String topicName = Optional.ofNullable(topicMap.get(post.getTopicId()))

@@ -22,10 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-public class PostController
-{
+public class PostController {
     private final PostService postService;
-
 
 
     public PostController(PostService postService) {
@@ -47,17 +45,17 @@ public class PostController
 
         return ApiResult.success(creatOk);
     }
+
     @PutMapping("/api/v1/posts/{postId}")
     @Operation(summary = "스파크 수정", description = "스파크(게시물) 수정")
     public ApiResult<Boolean> updatePost(
-        @PathVariable Long postId,
-        @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @RequestParam String content,
-        @RequestParam Long topicId
-    )
-    {
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam String content,
+            @RequestParam Long topicId
+    ) {
         Long authenticatedUserId = userDetails.getUser().getId();
-        boolean updateOk= this.postService.update(postId,authenticatedUserId,content,topicId);
+        boolean updateOk = this.postService.update(postId, authenticatedUserId, content, topicId);
         return ApiResult.success(updateOk);
     }
 
@@ -66,8 +64,7 @@ public class PostController
     public ApiResult<Boolean> deletePost(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long postId
-    )
-    {
+    ) {
         Long authenticatedUserId = userDetails.getUser().getId();
         boolean deleteOk = this.postService.delete(postId, authenticatedUserId);
         return ApiResult.success(deleteOk);
@@ -87,12 +84,8 @@ public class PostController
             @PathVariable Long topicId,
             @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
-    )
-    {
-        Cursor<PostResponse> posts = this.postService.getPostsByTopic(topicId, lastFetchedId, limit);
-
-        List<PostResponse> response = posts.getContents().stream().toList();
-        return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
+    ) {
+        return ApiResult.success(postService.getPostsByTopic(topicId, userDetails.getUser().getId(), lastFetchedId, limit));
     }
 
 
@@ -109,11 +102,8 @@ public class PostController
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(name = "lastFetchedId", required = false) Long lastFetchedId,
             @RequestParam(name = "limit", defaultValue = "20") Integer limit
-    )
-    {
-        Cursor<PostResponse> posts = this.postService.getAll(userDetails.getUser().getId(), lastFetchedId, limit);
-        List<PostResponse> response = posts.getContents().stream().toList();
-        return ApiResult.success(new CursorResponse<>(response, posts.getLastFetchedId(), posts.getHasNext()));
+    ) {
+        return ApiResult.success(postService.getAll(userDetails.getUser().getId(), lastFetchedId, limit));
     }
 
     /**

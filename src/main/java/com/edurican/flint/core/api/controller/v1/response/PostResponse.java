@@ -1,6 +1,7 @@
 package com.edurican.flint.core.api.controller.v1.response;
 
 import com.edurican.flint.core.domain.Post;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@AllArgsConstructor
 public class PostResponse {
     private Long id;
     private Long userId;
