@@ -3,6 +3,7 @@ package com.edurican.flint.core.domain;
 import com.edurican.flint.core.api.controller.v1.response.PostResponse;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.storage.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -13,111 +14,65 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class PostFeed {
-
     private final UserTopicRepository userTopicRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TopicRepository topicRepository;
 
-    @Autowired
-    public PostFeed(UserTopicRepository userTopicRepository, PostRepository postRepository, 
-                    UserRepository userRepository, TopicRepository topicRepository) {
-        this.userTopicRepository = userTopicRepository;
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-        this.topicRepository = topicRepository;
-    }
-
+    /**
+     *  사용자가 선호하는 토픽을 추천한다
+     *  만약 데이터가 충분하지 않다면 인기글을 추천한다
+     */
     public Cursor<PostResponse> getRecommendFeed(Long userId, Long lastFetchedId, Integer limit) {
 
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
+        // 특정 유저의 선호 토픽을 조회후 점수 합산
+        List<UserTopic> userTopics = userTopicRepository.findByUserIdOrderByScoreDesc(userId);
+        int totalScore = userTopics.stream().mapToInt(UserTopic::getScore).sum();
 
-        List<UserTopicEntity> userTopics = userTopicRepository.findByUserIdOrderByScoreDesc(userId);
-        double totalScore = userTopics.stream().mapToDouble(UserTopicEntity::getScore).sum();
-        if(userTopics.isEmpty() || userTopics.size() < 3 || totalScore < 20.0) {    // 임시 (데이터가 쌓이지 않았다면)
+        // 인기있는 게시글과 선호하는 게시글을 점수에따라 분배
+        double recommendRatio = calculateRecommendRatio(totalScore);
+        int recommendLimit = (int) (limit * (1 - recommendRatio));      // 인기있는 게시글 추천
+        int preferredLimit = limit - recommendLimit;                    // 선호하는 게시글 추천
 
-            Slice<Post> postEntities = postRepository.findByWithCursor(cursor, limit);
-            List<Post> postEntityList = postEntities.getContent();
-            
-            // username과 topicName 매핑
-            List<Long> userIds = postEntityList.stream().map(Post::getUserId).distinct().toList();
-            List<Long> topicIds = postEntityList.stream().map(Post::getTopicId).distinct().toList();
-            
-            Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
-                    .collect(Collectors.toMap(User::getId, Function.identity()));
-            Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
-                    .collect(Collectors.toMap(Topic::getId, Function.identity()));
-            
-            List<PostResponse> posts = postEntityList.stream()
-                    .map(post -> {
-                        User user = userMap.get(post.getUserId());
-                        Topic topic = topicMap.get(post.getTopicId());
-                        String username = (user != null) ? user.getUsername() : "";
-                        String topicName = (topic != null) ? topic.getTopicName() : "";
-                        return PostResponse.from(post, username, topicName);
-                    })
-                    .toList();
+        // 선호하는 피드를 탐색
+        List<Long> preferredTopicIds = userTopics.stream().map(UserTopic::getTopicId).toList();
+        List<PostResponse> feed = new ArrayList<>(postRepository.findPreferredPosts(preferredTopicIds, userId, lastFetchedId, preferredLimit));
 
-            Long nextCursor = (posts.isEmpty()) ? null : posts.get(posts.size() - 1).getId();
-            Boolean hasNext = (posts.size() == limit) ? true : false;
-            return new Cursor<>(posts, nextCursor, hasNext);
-        }
+        // 만약 limit보다 개수가 낮다면 그만큼 추천 피드의 개수를 추가
+        recommendLimit += preferredLimit - feed.size();
 
-        Map<Long, Integer> topicCounts = new HashMap<>();
-        for (int i = 0; i < limit; i++) {
-            double rand = ThreadLocalRandom.current().nextDouble() * totalScore;
-            double cumulative = 0;
+        // 선호 피드의 id를 조회하여 중복 조회되는 일을 방지
+        lastFetchedId = feed.isEmpty() ? lastFetchedId : feed.get(feed.size() - 1).getId();
 
-            for (UserTopicEntity topic : userTopics) {
-                cumulative += topic.getScore();
-                if (rand < cumulative) {
-                    topicCounts.merge(topic.getTopicId(), 1, Integer::sum);
-                    break;
-                }
-            }
-        }
+        // 인기있는 피드를 탐색 (선호하는 피드와 중복이 없어야함)
+        List<Long> excludingPostIds = feed.stream().map(PostResponse::getId).toList();
+        feed.addAll(postRepository.findRecommendPosts(excludingPostIds, userId, lastFetchedId, recommendLimit));
 
-        List<PostResponse> posts = topicCounts.entrySet().stream()
-                .flatMap(entry -> getTopicFeed(entry.getKey(), cursor, entry.getValue()).getContents().stream())
-                .sorted(Comparator.comparing(PostResponse::getId).reversed())
-                .limit(limit)
-                .toList();
-
-        Long nextCursor = (posts.isEmpty()) ? null : posts.get(posts.size() - 1).getId();
-        Boolean hasNext = (posts.size() == limit) ? true : false;
-        return new Cursor<>(posts, nextCursor, hasNext);
+        return makeCursor(feed, limit);
     }
 
-    public Cursor<PostResponse> getTopicFeed(Long topicId, Long lastFetchedId, Integer limit) {
-        Long cursor = (lastFetchedId == null || lastFetchedId == 0) ? Long.MAX_VALUE : lastFetchedId;
-
-        Slice<Post> postEntities = postRepository.findByTopicIdWithCursor(topicId, cursor, limit);
-        List<Post> postEntityList = postEntities.getContent();
-        
-        // username과 topicName 매핑
-        List<Long> userIds = postEntityList.stream().map(Post::getUserId).distinct().toList();
-        List<Long> topicIds = postEntityList.stream().map(Post::getTopicId).distinct().toList();
-        
-        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, Function.identity()));
-        Map<Long, Topic> topicMap = topicRepository.findAllById(topicIds).stream()
-                .collect(Collectors.toMap(Topic::getId, Function.identity()));
-        
-        List<PostResponse> posts = postEntityList.stream()
-                .map(postE -> {
-                    User userE = userMap.get(postE.getUserId());
-                    Topic topicE = topicMap.get(postE.getTopicId());
-                    String username = (userE != null) ? userE.getUsername() : "";
-                    String topicName = (topicE != null) ? topicE.getTopicName() : "";
-                    return PostResponse.from(postE, username, topicName);
-                })
-                .toList();
-
-        Long nextCursor = (postEntityList.isEmpty()) ? null : postEntityList.get(postEntityList.size() - 1).getId();
-        Boolean hasNext = (postEntityList.size() == limit) ? true : false;
-
-        return new Cursor<>(posts, nextCursor, hasNext);
+    private double calculateRecommendRatio(int totalScore) {
+        if(totalScore < 5) return 0.0;      // 100% 추천 피드
+        if(totalScore < 10) return 0.5;     //  50% 추천 피드
+        return 0.2;                         //  20% 추천 피드
     }
 
+    /**
+     *  특정 토픽을 최신순으로 보여준다
+     */
+    public Cursor<PostResponse> getTopicFeed(Long topicId, Long userId, Long lastFetchedId, Integer limit) {
+        return makeCursor(postRepository.findByTopicIdWithCursor(topicId, userId, lastFetchedId, limit), limit);
+    }
+
+    private Cursor<PostResponse> makeCursor(List<PostResponse> result, Integer limit) {
+        boolean hasNext = result.size() > limit;
+        long nextCursor = 0L;
+        if(hasNext) {
+            result.remove(limit.intValue());
+            nextCursor = result.get(result.size() - 1).getId();
+        }
+        return new Cursor<>(result, nextCursor, hasNext);
+    }
 }

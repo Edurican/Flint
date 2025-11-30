@@ -1,5 +1,6 @@
-package com.edurican.flint.storage;
+package com.edurican.flint.core.domain;
 
+import com.edurican.flint.storage.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_user_topic", columnList = "user_id, topic_id", unique = true)
         }
 )
-public class UserTopicEntity extends BaseEntity {
+public class UserTopic extends BaseEntity {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -27,9 +28,23 @@ public class UserTopicEntity extends BaseEntity {
     @Column(name = "score")
     private Integer score = 0;
 
-    public UserTopicEntity(Long userId, Long topicId) {
+    public UserTopic(Long userId, Long topicId) {
         this.userId = userId;
         this.topicId = topicId;
         this.score = 0;
+    }
+
+    /**
+     *  특정 토픽 선호점수 증가
+     */
+    public void increaseScore() {
+        this.score += 1;
+    }
+
+    /**
+     *  특정 토픽 선호점수 감소
+     */
+    public void decreaseScore() {
+        this.score -= 1;
     }
 }

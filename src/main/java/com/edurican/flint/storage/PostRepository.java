@@ -11,16 +11,13 @@ import org.springframework.data.repository.query.Param;
 import javax.swing.text.html.parser.Entity;
 import java.util.List;
 
-public interface PostRepository extends JpaRepository<Post,Long> {
+public interface PostRepository extends JpaRepository<Post,Long>, PostRepositoryCustom {
     
     List<Post> findByUserIdOrderByIdDesc(Long userId);
     List<Post> findByTopicId(Long topicId);
 
     @Query("SELECT p FROM Post p WHERE p.id < :cursor ORDER BY p.id DESC LIMIT :limit")
     Slice<Post> findByWithCursor(@Param("cursor") Long cursor, @Param("limit") Integer limit);
-
-    @Query("SELECT p FROM Post p WHERE p.topicId = :topicId AND p.id < :cursor ORDER BY p.id DESC LIMIT :limit")
-    Slice<Post> findByTopicIdWithCursor(@Param("topicId") Long topicId, @Param("cursor") Long cursor, @Param("limit") Integer limit);
 
     // 좋아요 증감
     @Modifying

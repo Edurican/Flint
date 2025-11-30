@@ -1,19 +1,19 @@
 package com.edurican.flint.storage;
 
+import com.edurican.flint.core.domain.UserTopic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface UserTopicRepository extends JpaRepository<UserTopicEntity, Long> {
+public interface UserTopicRepository extends JpaRepository<UserTopic, Long> {
 
-    List<UserTopicEntity> findByUserIdOrderByScoreDesc(Long userId);
+    List<UserTopic> findByUserId(Long userId);
 
-    UserTopicEntity findByUserIdAndTopicId(Long userId, Long topicId);
+    List<UserTopic> findByUserIdOrderByScoreDesc(Long userId);
 
-    @Modifying
-    @Query("UPDATE UserTopicEntity ut SET ut.score = ut.score + 1 WHERE ut.userId = :userId AND ut.topicId = :topicId")
-    int incrementScore(@Param("userId") Long  userId, @Param("topicId") Long topicId);
+    Optional<UserTopic> findByUserIdAndTopicId(Long userId, Long topicId);
 }
