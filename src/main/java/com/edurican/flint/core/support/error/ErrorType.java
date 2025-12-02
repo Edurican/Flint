@@ -23,7 +23,8 @@ public enum ErrorType {
     // Comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.COMMENT_NOT_FOUND, "댓글을 찾을 수 없습니다.", LogLevel.ERROR),
     INVALID_CONTENT(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_CONTENT, "존재하지 않는 댓글입니다.", LogLevel.ERROR),
-    COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.COMMENT_DEPTH_EXCEEDED, "댓글 답변 제한에 초과 됐습니다.", LogLevel.ERROR);
+    COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.COMMENT_DEPTH_EXCEEDED, "댓글 답변 제한에 초과 됐습니다.", LogLevel.ERROR),
+    CANNOT_DELETE_COMMENT(HttpStatus.BAD_REQUEST, ErrorCode.CANNOT_DELETE_COMMENT, "답변이 달린 댓글은 삭제할 수 없습니다.", LogLevel.ERROR);
 
     private final HttpStatus status;
 
