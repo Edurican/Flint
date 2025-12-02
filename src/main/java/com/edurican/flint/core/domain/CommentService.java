@@ -141,10 +141,6 @@ public class CommentService {
     @Transactional
     public boolean likeComment(Long userId, Long commentId) {
 
-        Comment comment = commentRepository
-                .findByIdAndStatus(commentId, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
-
         // 이미 좋아요한 경우 -> 취소
         int deleted = commentLikeRepository.deleteByUserIdAndCommentId(userId, commentId);
         if (deleted > 0) {
@@ -156,7 +152,7 @@ public class CommentService {
             return false; // 현재 상태: 좋아요 해제
         }
 
-        // 2️⃣ 좋아요가 안 되어 있었다면: insert 시도 + like_count + 1
+        // 좋아요가 안 되어 있었다면: insert 시도 + like_count + 1
         try {
             commentLikeRepository.save(new CommentLike(userId, commentId));
 
