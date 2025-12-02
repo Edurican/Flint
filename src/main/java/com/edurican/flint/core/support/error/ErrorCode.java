@@ -18,6 +18,7 @@ public enum ErrorCode {
     NOT_FOLLOWING,
 
     // comment (6000)
-    C6000,
-
+    COMMENT_NOT_FOUND,
+    INVALID_CONTENT,
+    COMMENT_DEPTH_EXCEEDED,
 }

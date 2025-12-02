@@ -21,9 +21,9 @@ public enum ErrorType {
     NOT_FOLLOWING(HttpStatus.CONFLICT, ErrorCode.NOT_FOLLOWING, "팔로우하지 않은 사용자입니다.", LogLevel.WARN),
 
     // Comment
-    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Comment not found.", LogLevel.ERROR),
-    INVALID_CONTENT(HttpStatus.NOT_FOUND, ErrorCode.C6000, "Invlid comment.", LogLevel.ERROR),
-    COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.C6000, "Comment depth exceeded.", LogLevel.ERROR);
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.COMMENT_NOT_FOUND, "댓글을 찾을 수 없습니다.", LogLevel.ERROR),
+    INVALID_CONTENT(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_CONTENT, "존재하지 않는 댓글입니다.", LogLevel.ERROR),
+    COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.COMMENT_DEPTH_EXCEEDED, "댓글 답변 제한에 초과 됐습니다.", LogLevel.ERROR);
 
     private final HttpStatus status;
 
