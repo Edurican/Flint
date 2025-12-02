@@ -33,6 +33,7 @@ public class CommentController {
     public CommentController(CommentService commentService) {
         this.commentService = commentService;
     }
+
     /**
      * 댓글 등록
      */
@@ -48,20 +49,10 @@ public class CommentController {
             @PathVariable Long postId,
             @RequestBody @Valid CreateCommentRequest request) {
 
-        Long userId;
-        String username;
-
-       if (userDetails == null) {
-           userId = 1L;
-           username = "test-user";
-       } else {
-            userId = userDetails.getUser().getId();
-            username = userDetails.getUser().getUsername();
-       }
-
-       CommentResponse response = commentService.createComment(userId, postId, username, request);
-
-       return ApiResult.success(response);
+        Long authenticatedUserId = userDetails.getUser().getId();
+        String username = userDetails.getUsername();
+        CommentResponse response = commentService.createComment(authenticatedUserId, postId, username, request);
+        return ApiResult.success(response);
     }
     /**
      * 댓글 수정
@@ -74,13 +65,11 @@ public class CommentController {
                             schema = @Schema(implementation = CommentResponse.class)))
     })
     public ApiResult<CommentResponse> updateComment(
-            @Valid @NotNull
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId,
             @RequestBody UpdateCommentRequest request) {
-
         CommentResponse updateResponse = commentService.updateComment(userDetails.getUser().getId(), commentId, request);
-            return ApiResult.success(updateResponse);
+        return ApiResult.success(updateResponse);
     }
     /**
      * 댓글 삭제
@@ -93,10 +82,8 @@ public class CommentController {
                             schema = @Schema(implementation = Boolean.class)))
     })
     public ApiResult<Void> deleteComment(
-            @Valid @NotNull
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId) {
-
         commentService.deleteComment(userDetails.getUser().getId(), commentId);
         return ApiResult.success(null);
     }
@@ -113,14 +100,14 @@ public class CommentController {
     public ApiResult<Boolean> likeComment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long commentId) {
-
         Long authenticatedUserId = userDetails.getUser().getId();
         boolean liked = commentService.likeComment(authenticatedUserId, commentId);
         return ApiResult.success(liked);
     }
-    /*
-    * 댓글 조회
-    * */
+
+    /**
+    *댓글 조회
+    */
     @GetMapping("/api/v1/comments")
     @Operation(summary = "댓글 조회", description = "게시글의 모든 댓글을 조회")
     @ApiResponses(value = {
@@ -132,17 +119,11 @@ public class CommentController {
             @RequestParam @NotNull Long postId,
             @RequestParam(required = false) Long commentId,
             @RequestParam(required = false) Long lastFetchedId,
-            @RequestParam(defaultValue = "20") @PositiveOrZero Integer limit
+            @RequestParam(defaultValue = "20")
+            @PositiveOrZero Integer limit
     ) {
-        Cursor<CommentSearchResponse> cur =
-                commentService.getComment(postId, commentId, lastFetchedId, limit);
-
-        CursorResponse<CommentSearchResponse> body = new CursorResponse<>(
-                cur.getContents(),
-                cur.getLastFetchedId(),
-                cur.getHasNext()
-        );
-
+        Cursor<CommentSearchResponse> cur = commentService.getComment(postId, commentId, lastFetchedId, limit);
+        CursorResponse<CommentSearchResponse> body = new CursorResponse<>(cur.getContents(), cur.getLastFetchedId(), cur.getHasNext());
         return ApiResult.success(body);
     }
 
