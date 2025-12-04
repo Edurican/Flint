@@ -218,7 +218,7 @@ public class CommentService {
                         long depth2 = commentRepository.countDepth2ByRoot(c.getId());
 
                         replyCount = depth1 + depth2;
-                    } else if (depth == 1) {
+                    } else if (depth == FIRST_DEPTH_SIZE) {
                         // depth1 댓글:
                         // 내 바로 아래(depth2) 자식 수만
                         replyCount = commentRepository.countByParentCommentIdAndStatus(
@@ -252,7 +252,6 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public long countCommentsByPost(Long postId) {
-        if (postId == null) throw new CoreException(ErrorType.DEFAULT_ERROR);
         return commentRepository.countAllByPost(postId);
     }
 }
