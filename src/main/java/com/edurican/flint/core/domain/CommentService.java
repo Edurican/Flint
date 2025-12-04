@@ -12,7 +12,6 @@ import com.edurican.flint.core.support.error.ErrorType;
 import com.edurican.flint.storage.CommentLikeRepository;
 import com.edurican.flint.storage.CommentRepository;
 import com.edurican.flint.storage.PostRepository;
-import com.edurican.flint.storage.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,6 @@ import java.util.List;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final PostRepository postRepository;
 
@@ -148,20 +146,15 @@ public class CommentService {
         }
 
         // 좋아요가 안 되어 있었다면: insert 시도 + like_count + 1
-        try {
-            commentLikeRepository.save(new CommentLike(userId, commentId));
+        commentLikeRepository.save(new CommentLike(userId, commentId));
 
-            int updated = commentRepository.incrementLikeCount(commentId);
-            if (updated <= 0) {
-                throw new CoreException(ErrorType.DEFAULT_ERROR);
-            }
-
-            return true; // 현재 상태: 좋아요됨
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // UNIQUE(user_id, comment_id) 때문에 중복 insert 시 여기로 옴
-            // 이미 다른 트랜잭션에서 좋아요 처리한 상태이므로 '좋아요됨'으로 취급
-            return true;
+        int updated = commentRepository.incrementLikeCount(commentId);
+        if (updated <= 0) {
+            throw new CoreException(ErrorType.DEFAULT_ERROR);
         }
+
+        return true;
+
     }
 
     @Transactional(readOnly = true)
