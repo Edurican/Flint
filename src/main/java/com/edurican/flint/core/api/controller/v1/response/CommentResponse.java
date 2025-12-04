@@ -1,12 +1,15 @@
 package com.edurican.flint.core.api.controller.v1.response;
 
+import com.edurican.flint.core.domain.Comment;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class CommentResponse {
     private Long id;
     private Long userId;
@@ -18,4 +21,19 @@ public class CommentResponse {
     private Integer likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static CommentResponse fromEntity(Comment comment) {
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .userId(comment.getUserId())
+                .postId(comment.getPostId())
+                .parentCommentId(comment.getParentCommentId())
+                .username(comment.getUsername())
+                .depth(comment.getDepth())
+                .content(comment.getContent())
+                .likeCount(comment.getLikeCount())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .build();
+    }
 }

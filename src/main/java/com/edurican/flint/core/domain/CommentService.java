@@ -9,17 +9,18 @@ import com.edurican.flint.core.enums.EntityStatus;
 import com.edurican.flint.core.support.Cursor;
 import com.edurican.flint.core.support.error.CoreException;
 import com.edurican.flint.core.support.error.ErrorType;
-import com.edurican.flint.storage.*;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.edurican.flint.storage.CommentLikeRepository;
+import com.edurican.flint.storage.CommentRepository;
+import com.edurican.flint.storage.PostRepository;
+import com.edurican.flint.storage.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class CommentService {
 
     private final CommentRepository commentRepository;
@@ -27,27 +28,19 @@ public class CommentService {
     private final CommentLikeRepository commentLikeRepository;
     private final PostRepository postRepository;
 
-    @Autowired
-    public CommentService(CommentRepository commentRepository,
-                          UserRepository userRepository,
-                          CommentLikeRepository commentLikeRepository, PostRepository postRepository) {
-        this.commentRepository = commentRepository;
-        this.userRepository = userRepository;
-        this.commentLikeRepository = commentLikeRepository;
-        this.postRepository = postRepository;
-    }
+    private static final Integer ROOT_DEPTH_SIZE = 0;
+    private static final Integer FIRST_DEPTH_SIZE = 1;
+    private static final Integer SECOND_DEPTH_SIZE = 2;
 
     /**
      * 댓글 등록
      */
     @Transactional
-    public CommentResponse createComment(Long userId, Long postId, String username, CreateCommentRequest request) {
+    public Comment createComment(Long userId, Long postId, String username, CreateCommentRequest request) {
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new CoreException(ErrorType.USER_NOT_FOUND));
         // 부모 댓글 검증
         Long parentCommentId = request.getParentCommentId();
-        int depth = 0;
+        int depth = ROOT_DEPTH_SIZE;
 
         // 부모 댓글이 있는 경우
         if (parentCommentId != null) {
@@ -55,13 +48,13 @@ public class CommentService {
                     .findByIdAndStatus(parentCommentId, EntityStatus.ACTIVE)
                     .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
-            // 부모 댓글이 같은 게시글에 속한느지
+            // 부모 댓글이 같은 게시글에 속하는지
             if (!parent.getPostId().equals(postId)) {
                 throw new CoreException(ErrorType.DEFAULT_ERROR);
             }
 
             int parentDepth = parent.getDepth();
-            if (parentDepth >= 2) {
+            if (parentDepth >= SECOND_DEPTH_SIZE) {
                 throw new CoreException(ErrorType.COMMENT_DEPTH_EXCEEDED);
             }
 
@@ -69,23 +62,18 @@ public class CommentService {
         }
 
         // 댓글 생성, 저장
-        Comment comment = new Comment(userId, postId, parentCommentId, username, depth, request.getContent());
-        Comment saved = commentRepository.save(comment);
+        Comment comment = commentRepository.save(Comment.builder()
+                .userId(userId)
+                .postId(postId)
+                .username(username)
+                .parentCommentId(parentCommentId)
+                .depth(depth)
+                .content(request.getContent())
+                .build());
 
         postRepository.incrementCommentCount(postId);
 
-        return new CommentResponse(
-                saved.getId(),
-                comment.getUserId(),
-                saved.getPostId(),
-                saved.getParentCommentId(),
-                saved.getUsername(),
-                saved.getDepth(),
-                saved.getContent(),
-                saved.getLikeCount(),
-                saved.getCreatedAt(),
-                saved.getUpdatedAt()
-        );
+        return comment;
     }
 
     /**
