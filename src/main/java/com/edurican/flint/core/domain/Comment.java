@@ -1,13 +1,15 @@
 package com.edurican.flint.core.domain;
+
 import com.edurican.flint.storage.BaseSoftEntity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import lombok.*;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "comments",
         indexes = {
@@ -37,6 +39,7 @@ public class Comment extends BaseSoftEntity {
     @Column(name = "like_count")
     private Integer likeCount = 0;
 
+    @Builder
     public Comment(Long userId, Long postId, Long parentCommentId, String username, Integer depth, String content) {
         this.userId = userId;
         this.postId = postId;
