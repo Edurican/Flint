@@ -11,5 +11,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Comment
 
     Optional<Comment> findByIdAndStatus(Long id, EntityStatus status);
 
+    boolean existsByParentCommentIdAndStatus(Long parentCommentId, EntityStatus status);
+
     long countByParentCommentIdAndStatus(Long parentCommentId, EntityStatus status);
 }
