@@ -121,9 +121,14 @@ public class CommentService {
         if (!comment.getUserId().equals(userId)) {
             throw new CoreException(ErrorType.DEFAULT_ERROR);
         }
+        // 답변이 있는 댓글인지(만약 맞다면 삭제 불가)
+        boolean hasReply = commentRepository.existsByParentCommentIdAndStatus(commentId, EntityStatus.ACTIVE);
+        if (hasReply) {
+            throw  new CoreException(ErrorType.CANNOT_DELETE_COMMENT);
+        }
+
         // Soft Delete
         comment.deleted();
-
         Long postId = comment.getPostId();
         postRepository.decrementCommentCount(postId);
     }
