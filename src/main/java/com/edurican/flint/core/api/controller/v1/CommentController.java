@@ -50,9 +50,11 @@ public class CommentController {
             @RequestBody @Valid CreateCommentRequest request) {
 
         Long authenticatedUserId = userDetails.getUser().getId();
-        String username = userDetails.getUsername();
-        CommentResponse response = commentService.createComment(authenticatedUserId, postId, username, request);
-        return ApiResult.success(response);
+        return ApiResult.success(
+                CommentResponse.fromEntity(
+                        commentService.createComment(authenticatedUserId, postId, userDetails.getUsername(), request)
+                )
+        );
     }
     /**
      * 댓글 수정
