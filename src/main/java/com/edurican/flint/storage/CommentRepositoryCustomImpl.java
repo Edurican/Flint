@@ -4,12 +4,14 @@ import com.edurican.flint.core.domain.Comment;
 import com.edurican.flint.core.domain.QComment;
 import com.edurican.flint.core.enums.EntityStatus;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -100,5 +102,63 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .fetchOne();
 
         return count != null ? count : 0L;
+    }
+
+    @Override
+    public Map<Long, Long> countDirectChildrenByParentIds(List<Long> parentIds) {
+        if (parentIds == null || parentIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return queryFactory
+                .select(comment.parentCommentId, comment.count())
+                .from(comment)
+                .where(
+                        comment.parentCommentId.in(parentIds),
+                        comment.status.eq(EntityStatus.ACTIVE)
+                )
+                .groupBy(comment.parentCommentId)
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(
+                        tuple -> tuple.get(comment.parentCommentId),
+                        tuple -> {
+                            Long count = tuple.get(comment.count());
+                            return count != null ? count : 0L;
+                        }
+                ));
+    }
+
+    @Override
+    public Map<Long, Long> countDepth2ByRootIds(List<Long> rootIds) {
+        if (rootIds == null || rootIds.isEmpty()) {
+            return Map.of();
+        }
+
+        QComment child = new QComment("child");
+        QComment grandChild = new QComment("grandChild");
+
+        List<Tuple> rows = queryFactory
+                .select(child.parentCommentId, grandChild.count())
+                .from(child)
+                .join(grandChild).on(
+                        grandChild.parentCommentId.eq(child.id),
+                        grandChild.status.eq(EntityStatus.ACTIVE)
+                )
+                .where(
+                        child.parentCommentId.in(rootIds),
+                        child.status.eq(EntityStatus.ACTIVE)
+                )
+                .groupBy(child.parentCommentId)
+                .fetch();
+
+        return rows.stream()
+                .collect(Collectors.toMap(
+                        tuple -> tuple.get(child.parentCommentId),
+                        tuple -> {
+                            Long count = tuple.get(grandChild.count());
+                            return count != null ? count : 0L;
+                        }
+                ));
     }
 }
