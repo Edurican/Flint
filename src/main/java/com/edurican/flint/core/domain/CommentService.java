@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -207,28 +208,30 @@ public class CommentService {
             rows = rows.subList(0, limit);
         }
 
+        List<Long> rootCommentIds = rows.stream()
+                .filter(comment -> comment.getDepth() == ROOT_DEPTH_SIZE)
+                .map(Comment::getId)
+                .toList();
+        List<Long> firstDepthCommentIds = rows.stream()
+                .filter(comment -> comment.getDepth() == FIRST_DEPTH_SIZE)
+                .map(Comment::getId)
+                .toList();
+
+        Map<Long, Long> rootDirectReplyCounts = commentRepository.countDirectChildrenByParentIds(rootCommentIds);
+        Map<Long, Long> rootDepth2ReplyCounts = commentRepository.countDepth2ByRootIds(rootCommentIds);
+        Map<Long, Long> firstDepthReplyCounts = commentRepository.countDirectChildrenByParentIds(firstDepthCommentIds);
+
         List<CommentSearchResponse> contents = rows.stream()
                 .map(c -> {
                     long replyCount = 0L;
 
                     int depth = c.getDepth();
 
-                    if (depth == 0) {
-                        // 루트 댓글:
-                        // 1) 내 바로 아래(depth1) 자식 수
-                        long depth1 = commentRepository.countByParentCommentIdAndStatus(
-                                c.getId(), EntityStatus.ACTIVE
-                        );
-                        // 2) 그 자식들의(depth1) 자식(depth2) 수
-                        long depth2 = commentRepository.countDepth2ByRoot(c.getId());
-
-                        replyCount = depth1 + depth2;
+                    if (depth == ROOT_DEPTH_SIZE) {
+                        replyCount = rootDirectReplyCounts.getOrDefault(c.getId(), 0L)
+                                + rootDepth2ReplyCounts.getOrDefault(c.getId(), 0L);
                     } else if (depth == FIRST_DEPTH_SIZE) {
-                        // depth1 댓글:
-                        // 내 바로 아래(depth2) 자식 수만
-                        replyCount = commentRepository.countByParentCommentIdAndStatus(
-                                c.getId(), EntityStatus.ACTIVE
-                        );
+                        replyCount = firstDepthReplyCounts.getOrDefault(c.getId(), 0L);
                     } else {
                         // depth2 이상은 더 내려가지 않음
                         replyCount = 0L;
