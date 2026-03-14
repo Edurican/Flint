@@ -1,9 +1,8 @@
 package com.edurican.flint.storage;
 import com.edurican.flint.core.domain.Comment;
-import com.edurican.flint.core.enums.EntityStatus;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 public interface CommentRepositoryCustom {
 
@@ -18,4 +17,8 @@ public interface CommentRepositoryCustom {
     List<Comment> findRootCommentsWithCursor(Long postId, Long cursor, int limit);
 
     long countDepth2ByRoot(Long rootId);
+
+    Map<Long, Long> countDirectChildrenByParentIds(List<Long> parentIds);
+
+    Map<Long, Long> countDepth2ByRootIds(List<Long> rootIds);
 }
